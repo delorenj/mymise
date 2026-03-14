@@ -1,0 +1,38 @@
+[tools]
+python = "3.12"
+
+[tasks.build]
+description = "Build the package"
+run = "uv build"
+
+[tasks.test]
+description = "Run tests"
+run = "uv run pytest -v"
+
+[tasks.lint]
+description = "Run linter"
+run = "uv run ruff check src/ tests/"
+
+[tasks."lint:fix"]
+description = "Fix lint issues"
+run = "uv run ruff check --fix src/ tests/"
+
+[tasks.format]
+description = "Format code"
+run = "uv run ruff format src/ tests/"
+
+[tasks.ci]
+description = "Run full CI checks"
+depends = ["lint", "test"]
+
+[tasks.dev]
+description = "Install in development mode"
+run = "uv sync --group dev"
+
+[tasks.scan]
+description = "Run mymise scan"
+run = "uv run mymise scan"
+
+[tasks.resolve]
+description = "Run mymise resolve"
+run = "uv run mymise resolve"
