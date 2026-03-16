@@ -1,7 +1,15 @@
 ---
-stepsCompleted: [executive-summary, success-criteria, scope, user-journeys, functional-requirements, non-functional-requirements]
+stepsCompleted:
+  [
+    executive-summary,
+    success-criteria,
+    scope,
+    user-journeys,
+    functional-requirements,
+    non-functional-requirements,
+  ]
 inputDocuments: [Braindump.md]
-workflowType: 'prd'
+workflowType: "prd"
 ---
 
 # Product Requirements Document - mymise
@@ -15,9 +23,10 @@ workflowType: 'prd'
 
 **Vision:** One command captures your CLI genome. One command reproduces it on any machine.
 
-**Differentiator:** Unlike dotfile managers (chezmoi, yadm) that track config files, or Nix that requires learning a DSL, mymise works backwards from *what you actually use* -- mining your shell history and installed binaries -- to generate a mise-native toolchain manifest. Zero upfront curation required.
+**Differentiator:** Unlike dotfile managers (chezmoi, yadm) that track config files, or Nix that requires learning a DSL, mymise works backwards from _what you actually use_ -- mining your shell history and installed binaries -- to generate a mise-native toolchain manifest. Zero upfront curation required.
 
 **Target Users:**
+
 - Power-user developers with 50+ CLI tools accumulated organically across package managers
 - Developers who rebuild machines or onboard to new hardware regularly
 - Teams wanting to standardize developer tooling without imposing a package manager
@@ -26,13 +35,13 @@ workflowType: 'prd'
 
 ## Success Criteria
 
-| ID | Metric | Target | Measurement |
-|----|--------|--------|-------------|
-| SC-1 | Tool discovery completeness | ≥90% of actively-used CLI tools captured from a test machine | Compare mymise output against manual audit of 50 known-installed tools |
-| SC-2 | Registry resolution rate | ≥70% of discovered tools resolve to a mise-installable backend | Count resolved vs unresolved in M2 output |
-| SC-3 | Bootstrap reproducibility | A fresh machine can install all resolved tools from mymise output | Run `mise install` from generated config on clean Ubuntu container |
-| SC-4 | Scan-to-output time | <30 seconds for full scan + resolution pipeline | Wall clock on reference machine (~10K history entries, ~80 mise tools) |
-| SC-5 | Zero false positives | No shell builtins, aliases, or non-tool commands appear in output | Validate against known-bad list (cd, ls, echo, etc.) |
+| ID   | Metric                      | Target                                                            | Measurement                                                            |
+| ---- | --------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| SC-1 | Tool discovery completeness | ≥90% of actively-used CLI tools captured from a test machine      | Compare mymise output against manual audit of 50 known-installed tools |
+| SC-2 | Registry resolution rate    | ≥70% of discovered tools resolve to a mise-installable backend    | Count resolved vs unresolved in M2 output                              |
+| SC-3 | Bootstrap reproducibility   | A fresh machine can install all resolved tools from mymise output | Run `mise install` from generated config on clean Ubuntu container     |
+| SC-4 | Scan-to-output time         | <30 seconds for full scan + resolution pipeline                   | Wall clock on reference machine (~10K history entries, ~80 mise tools) |
+| SC-5 | Zero false positives        | No shell builtins, aliases, or non-tool commands appear in output | Validate against known-bad list (cd, ls, echo, etc.)                   |
 
 ## Product Scope
 
@@ -43,17 +52,20 @@ Scan shell history and system state. Produce a JSON manifest of every CLI tool o
 ### Milestone 2 — Resolution
 
 Take M1's JSON manifest, resolve each tool against mise's built-in registry and aqua registry. Produce two lists:
+
 1. **Resolved:** Tools where `mise install <tool>@latest` succeeds (or has a known registry entry)
 2. **Unresolved:** Tools that have no mise registry mapping
 
 ### Milestone 3 — Registration
 
 For unresolved tools, provide pathways to register them:
+
 1. Auto-generate personal registry entries (shorthands.toml) for tools with GitHub releases
 2. Suggest aqua registry contributions for popular tools
 3. Generate a bootstrap script that installs everything
 
 ### Out of Scope (Future)
+
 - Multi-machine merge (combining manifests from different hosts)
 - Version pinning from history frequency analysis
 - GUI/TUI interactive mode
@@ -66,6 +78,7 @@ For unresolved tools, provide pathways to register them:
 **Persona:** Developer with 3+ years of accumulated tools on a Linux workstation.
 
 **Flow:**
+
 1. User runs `mymise scan`
 2. mymise parses `~/.zsh_history` (format: `: <timestamp>:<duration>;command`)
 3. mymise scans PATH directories for executables
@@ -80,6 +93,7 @@ For unresolved tools, provide pathways to register them:
 **Persona:** Same developer, wants to know which tools mise can manage.
 
 **Flow:**
+
 1. User runs `mymise resolve` (or `mymise resolve --input mymise-discovery.json`)
 2. mymise loads discovery JSON
 3. For each tool, queries `mise registry <tool>` to check for a registry entry
@@ -94,6 +108,7 @@ For unresolved tools, provide pathways to register them:
 **Persona:** Developer ready to create a portable toolchain.
 
 **Flow:**
+
 1. User runs `mymise register` (or `mymise register --input mymise-resolved.json`)
 2. For unresolved tools with GitHub repos, generates personal registry entries
 3. For remaining tools, suggests package manager install commands
