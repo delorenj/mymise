@@ -33,3 +33,5 @@ bootstrap.sh
 
 # Sisyphus
 .sisyphus/
+.ralph/logs/
+_bmad-output/
