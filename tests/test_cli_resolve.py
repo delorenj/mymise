@@ -17,7 +17,7 @@ from mymise.models import (
     UnresolvedTool,
 )
 
-runner = CliRunner(mix_stderr=False)
+runner = CliRunner()
 
 
 @pytest.fixture
@@ -92,15 +92,15 @@ def test_resolve_default(
         assert "git" in output_file.read_text()
         
         # Check output for summary
-        assert "Resolution Complete!" in result.stderr
-        assert "Resolved Tools" in result.stderr
-        assert "1" in result.stderr  # count of resolved
-        assert "Unresolved Tools" in result.stderr
-        assert "1" in result.stderr  # count of unresolved
-        assert "Resolution Rate" in result.stderr
-        assert "50.0%" in result.stderr
-        assert "Backend Distribution" in result.stderr
-        assert "core" in result.stderr  # the backend type from mock_resolution_result
+        assert "Resolution Complete!" in result.output
+        assert "Resolved Tools" in result.output
+        assert "1" in result.output  # count of resolved
+        assert "Unresolved Tools" in result.output
+        assert "1" in result.output  # count of unresolved
+        assert "Resolution Rate" in result.output
+        assert "50.0%" in result.output
+        assert "Backend Distribution" in result.output
+        assert "core" in result.output  # the backend type from mock_resolution_result
 
 
 @patch("mymise.cli.run_resolve")
@@ -151,8 +151,8 @@ def test_resolve_input_missing(tmp_path: Path) -> None:
     with runner.isolated_filesystem(temp_dir=tmp_path):
         result = runner.invoke(app, ["resolve", "--input", "nonexistent.json"])
         assert result.exit_code == 2
-        assert "error" in result.stderr.lower()
-        assert "not found" in result.stderr.lower()
+        assert "error" in result.output.lower()
+        assert "not found" in result.output.lower()
 
 
 @patch("mymise.cli.run_resolve")

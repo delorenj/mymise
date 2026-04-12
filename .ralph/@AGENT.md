@@ -22,6 +22,8 @@ pytest --cov=src tests/ --cov-report=term-missing
 ```bash
 # Run via uv
 uv run mymise scan
+uv run mymise resolve
+uv run mymise register
 
 # Or after install
 mymise scan
