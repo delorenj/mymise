@@ -6,14 +6,7 @@
 > Goal: **User Outcome:** Developer runs `mymise scan` and gets a complete inventory of every CLI tool on their system, with source provenance and usage frequency. **FRs covered:** FR-1, FR-2, FR-3, FR-4, FR-5, FR-9 (partial, scan subcommand flags) **NFRs addressed:** NFR-1, NFR-2, NFR-4, NFR-5 **Arch requirements:** AR-1, AR-2, AR-3, AR-4 **Dependencies:** None (first epic)
 
 - [x] Story 1.1: Implement Zsh History Collector
-  > **Status:** Draft As a developer
-  > I want mymise to parse my zsh history and extract every CLI tool I've used
-  > So that frequently-used tools are prioritized in my tool inventory.
-  > AC: Given a zsh extended history file with entries in `: <timestamp>:<duration>;command` format, When the HistoryCollector runs, Then it returns a list of DiscoveredTool objects with source=HISTORY, frequency counts, and last_used timestamps, And shell builtins (cd, echo, export, etc.) are excluded from results
-  > AC: Given the history file does not exist or is unreadable, When `available()` is called, Then it returns False
-  > AC: Given a history entry with pipes or subshells (e.g., `cat foo | grep bar`), When the collector parses the entry, Then it extracts all binaries in the pipeline (both `cat` and `grep`)
-  > Spec: specs/planning-artifacts/epics.md#story-1-1
-- [ ] Story 1.2: Implement PATH Binary Collector
+- [x] Story 1.2: Implement PATH Binary Collector
   > **Status:** Draft As a developer
   > I want mymise to scan my PATH directories and identify all executable binaries
   > So that I have a complete picture of what's installed regardless of usage history.
