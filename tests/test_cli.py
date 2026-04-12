@@ -140,8 +140,3 @@ def test_scan_partial_failure(mock_scan: MagicMock, mock_discovery_result: Disco
         assert result.exit_code == 1
         assert "Some collector failed" in result.output
         assert "!" in result.output
-
-
-def test_all_not_implemented() -> None:
-    result = runner.invoke(app, ["all"])
-    assert result.exit_code == 1

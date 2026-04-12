@@ -27,7 +27,6 @@
 
 - [x] Story 3.1: Implement Registrar Artifact Generation
 - [x] Story 3.2: Wire Register CLI Command with Flags and Output Routing
-  > **Status:** Draft As a developer
 
   > I want to run `mymise register` with configurable input, output directory, and shorthands filename
   > So that I can route the generated artifacts anywhere I need them.
@@ -40,7 +39,7 @@
 ### CLI Integration & Full Pipeline
 > Goal: **User Outcome:** Developer runs `mymise all` and the entire scan-resolve-register pipeline executes end-to-end. **FRs covered:** FR-9 **NFRs addressed:** NFR-2, NFR-3 **Arch requirements:** AR-4 **Dependencies:** All of Epics 1-3
 
-- [ ] Story 4.1: Implement End-to-End Pipeline Command
+- [x] Story 4.1: Implement End-to-End Pipeline Command
   > **Status:** Draft As a developer
   > I want to run `mymise all` and have the entire scan-resolve-register pipeline execute in sequence
   > So that I can go from zero to a complete environment specification in one command.

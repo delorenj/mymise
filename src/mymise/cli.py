@@ -10,10 +10,10 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.table import Table
 
-from mymise.scanner import scan as run_scan
-from mymise.resolver import resolve as run_resolve
-from mymise.registrar import register as run_register
 from mymise.models import DiscoveryResult, ResolutionResult
+from mymise.registrar import register as run_register
+from mymise.resolver import resolve as run_resolve
+from mymise.scanner import scan as run_scan
 
 app = typer.Typer(name="mymise", help="Reverse-engineer your CLI toolchain and resolve against mise registry.")
 console = Console(stderr=True)
@@ -23,7 +23,7 @@ logging.basicConfig(
     level="INFO",
     format="%(message)s",
     datefmt="[%X]",
-    handlers=[RichHandler(console=console, rich_tracebacks=True)]
+    handlers=[RichHandler(console=console, rich_tracebacks=True)],
 )
 logger = logging.getLogger("mymise")
 
@@ -86,28 +86,28 @@ def _print_scan_summary(result) -> None:
 def _print_resolve_summary(result) -> None:
     """Print a rich summary of the resolution results to stderr."""
     console.print("\n[bold green]Resolution Complete![/]", style="green")
-    
+
     table = Table(box=None)
     table.add_column("Metric", style="cyan")
     table.add_column("Value", justify="right", style="magenta")
-    
+
     table.add_row("Resolved Tools", str(len(result.resolved)))
     table.add_row("Unresolved Tools", str(len(result.unresolved)))
     table.add_row("Resolution Rate", f"{result.resolution_rate * 100:.1f}%")
-    
+
     console.print(table)
-    
+
     # Backend distribution
     backend_counts = {}
     for tool in result.resolved:
         backend_counts[tool.backend] = backend_counts.get(tool.backend, 0) + 1
-    
+
     if backend_counts:
         console.print("\n[bold]Backend Distribution:[/]")
         b_table = Table(box=None)
         b_table.add_column("Backend", style="yellow")
         b_table.add_column("Count", justify="right")
-        
+
         for backend in sorted(backend_counts.keys()):
             b_table.add_row(str(backend), str(backend_counts[backend]))
         console.print(b_table)
@@ -124,21 +124,21 @@ def _print_register_summary(artifacts: dict[str, Path], resolution: ResolutionRe
 
     # Counts
     resolved_count = len(resolution.resolved)
-    
+
     # Calculate shorthands and fallback counts (re-mimicking Registrar logic roughly for summary)
     github_pattern = re.compile(r"github:[a-zA-Z0-9\-\._/]+")
-    
+
     shorthands_count = 0
     fallback_count = 0
-    
+
     for ut in resolution.unresolved:
         is_github = any(github_pattern.search(action) for action in ut.suggested_actions)
         if is_github:
             shorthands_count += 1
         else:
             # Check if it has any install command
-            if any(any(x in action for x in ["apt install", "cargo install", "npm install", "pip install", "go install"]) 
-                   for action in ut.suggested_actions) or ut.suggested_actions:
+            pkgs = ["apt install", "cargo install", "npm install", "pip install", "go install"]
+            if any(any(x in action for x in pkgs) for action in ut.suggested_actions) or ut.suggested_actions:
                 fallback_count += 1
 
     for name, path in artifacts.items():
@@ -150,7 +150,7 @@ def _print_register_summary(artifacts: dict[str, Path], resolution: ResolutionRe
         else:
             # Assumed shorthands file
             count = shorthands_count
-        
+
         table.add_row(name, str(count), str(path))
 
     console.print(table)
@@ -194,7 +194,7 @@ def scan(
             output.write_text(output_content)
         else:
             output.write_text(result.model_dump_json(indent=2))
-        
+
         # Summary to stderr
         _print_scan_summary(result)
 
@@ -214,15 +214,15 @@ def resolve(
     if not input_file.exists():
         console.print(f"[bold red]Error:[/] Input file {input_file} not found.", style="red")
         raise typer.Exit(2)
-    
+
     try:
         discovery = DiscoveryResult.model_validate_json(input_file.read_text())
     except Exception as e:
         console.print(f"[bold red]Error:[/] Failed to parse discovery file: {e}", style="red")
-        raise typer.Exit(2)
-    
+        raise typer.Exit(2) from e
+
     result = run_resolve(discovery, timeout=timeout, dry_run=dry_run)
-    
+
     if ctx.parent and ctx.parent.params.get("json"):
         print(result.model_dump_json(indent=2))
     else:
@@ -235,7 +235,9 @@ def register(
     ctx: typer.Context,
     input_file: Path = typer.Option("mymise-resolved.json", "--input", "-i", help="Resolution JSON from resolve"),
     output_dir: Path = typer.Option(".", "--output-dir", "-d", help="Output directory for artifacts"),
-    shorthands_file: str = typer.Option("shorthands.toml", "--shorthands-file", help="Filename for personal registry shorthands"),
+    shorthands_file: str = typer.Option(
+        "shorthands.toml", "--shorthands-file", help="Filename for personal registry shorthands"
+    ),
 ) -> None:
     """Generate mise artifacts from resolution results."""
     if not input_file.exists():
@@ -246,12 +248,13 @@ def register(
         resolution = ResolutionResult.model_validate_json(input_file.read_text())
     except Exception as e:
         console.print(f"[bold red]Error:[/] Failed to parse resolution file: {e}", style="red")
-        raise typer.Exit(2)
+        raise typer.Exit(2) from e
 
     artifacts = run_register(resolution, output_dir=output_dir, shorthands_file=shorthands_file)
 
     if ctx.parent and ctx.parent.params.get("json"):
         import json
+
         print(json.dumps({k: str(v) for k, v in artifacts.items()}, indent=2))
     else:
         _print_register_summary(artifacts, resolution)
@@ -262,10 +265,37 @@ def run_all(
     ctx: typer.Context,
     history_file: Path = typer.Option(DEFAULT_HISTORY, "--history-file", "-h", help="Path to shell history file"),
     output_dir: Path = typer.Option(".", "--output-dir", "-d", help="Output directory for all artifacts"),
+    skip_pkg_managers: str = typer.Option("", "--skip-pkg-managers", help="Comma-separated list of pkg-mgrs to skip"),
 ) -> None:
     """Run full scan -> resolve -> register pipeline."""
-    console.print("[bold]mymise all[/] - not yet implemented", style="yellow")
-    raise typer.Exit(1)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # 1. SCAN
+    console.print("[bold cyan]>>> Step 1/3: Scanning system...[/]")
+    skip_list = [s.strip() for s in skip_pkg_managers.split(",") if s.strip()]
+    discovery = run_scan(history_file=str(history_file), skip_pkg_managers=skip_list)
+
+    discovery_path = output_dir / "mymise-discovery.json"
+    discovery_path.write_text(discovery.model_dump_json(indent=2))
+    _print_scan_summary(discovery)
+
+    # 2. RESOLVE
+    console.print("\n[bold cyan]>>> Step 2/3: Resolving tools against mise registry...[/]")
+    resolution = run_resolve(discovery)
+
+    resolution_path = output_dir / "mymise-resolved.json"
+    resolution_path.write_text(resolution.model_dump_json(indent=2))
+    _print_resolve_summary(resolution)
+
+    # 3. REGISTER
+    console.print("\n[bold cyan]>>> Step 3/3: Generating mise artifacts...[/]")
+    artifacts = run_register(resolution, output_dir=output_dir)
+    _print_register_summary(artifacts, resolution)
+
+    console.print(f"\n[bold green]Pipeline Complete![/] All files generated in [bold]{output_dir}[/]")
+
+    if discovery.partial_failure:
+        raise typer.Exit(1)
 
 
 if __name__ == "__main__":
