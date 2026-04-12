@@ -7,14 +7,7 @@
 
 - [x] Story 1.1: Implement Zsh History Collector
 - [x] Story 1.2: Implement PATH Binary Collector
-  > **Status:** Draft As a developer
-  > I want mymise to scan my PATH directories and identify all executable binaries
-  > So that I have a complete picture of what's installed regardless of usage history.
-  > AC: Given a system with multiple PATH directories, When the PathCollector runs, Then it returns DiscoveredTool objects for each executable found, with source=PATH and binary_path set
-  > AC: Given a PATH entry contains symlinks, When the collector scans that directory, Then it follows symlinks and deduplicates by resolved target
-  > AC: Given a PATH directory does not exist, When the collector scans PATH, Then it skips that directory silently and continues
-  > Spec: specs/planning-artifacts/epics.md#story-1-2
-- [ ] Story 1.3a: Implement Apt Collector
+- [x] Story 1.3a: Implement Apt Collector
   > As a developer, I want mymise to inventory tools installed via apt, so that Debian/Ubuntu system packages are captured with provenance.
   > AC: Given apt is available, When the AptCollector runs, Then it returns DiscoveredTool objects with source=APT for each installed package that provides an executable
   > AC: Given apt is not installed, When available() is called, Then it returns False and the collector is skipped gracefully
