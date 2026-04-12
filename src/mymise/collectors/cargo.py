@@ -26,15 +26,16 @@ class CargoCollector:
             )
 
             tools = []
-            # Lines look like: bat v0.24.0:
+            # Lines look like: bat v0.24.0: or some-tool v1.2.3-beta.1:
             for line in result.stdout.splitlines():
-                match = re.match(r"^([\w\-\.]+)\s+v[\d\.]+:.*$", line)
+                match = re.match(r"^([\w\-\.]+)\s+v([^:]+):$", line)
                 if match:
                     pkg_name = match.group(1)
                     tools.append(
                         DiscoveredTool(
                             name=pkg_name,
                             sources=[ToolSource.CARGO],
+                            installed_by=[ToolSource.CARGO],
                         )
                     )
             return tools

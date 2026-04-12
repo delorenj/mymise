@@ -39,6 +39,23 @@ def test_cargo_collector_collect_success():
         assert "ripgrep" in tool_names
         assert "fd-find" in tool_names
         assert all(t.sources == [ToolSource.CARGO] for t in tools)
+        assert all(t.installed_by == [ToolSource.CARGO] for t in tools)
+
+
+def test_cargo_collector_collect_complex_version():
+    # Mocking cargo install --list output with complex version (e.g. -beta.1)
+    mock_output = "some-tool v1.2.3-beta.1:\n    some-tool\n"
+
+    with patch("shutil.which", return_value="/usr/bin/cargo"), patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(stdout=mock_output, stderr="", returncode=0)
+
+        collector = CargoCollector()
+        tools = collector.collect()
+
+        assert len(tools) == 1
+        assert tools[0].name == "some-tool"
+        assert tools[0].sources == [ToolSource.CARGO]
+        assert tools[0].installed_by == [ToolSource.CARGO]
 
 
 def test_cargo_collector_collect_timeout():

@@ -11,12 +11,7 @@
 - [x] Story 1.3b: Implement Snap Collector
 - [x] Story 1.3c: Implement Mise Collector
 - [x] Story 1.4a: Implement Cargo Collector
-  > As a developer, I want mymise to inventory tools installed via cargo, so that Rust toolchain binaries are captured with provenance.
-  > AC: Given cargo is available, When the CargoCollector runs, Then it returns DiscoveredTool objects with source=CARGO for installed cargo binaries
-  > AC: Given cargo is not on PATH, When available() is called, Then it returns False and the scan continues without error
-  > AC: Given the cargo subprocess exceeds 10 seconds, When the timeout fires, Then the collector returns an empty list and logs a warning
-  > Spec: specs/planning-artifacts/epics.md#story-1-4a | Files: src/mymise/collectors/cargo.py, tests/collectors/test_cargo.py
-- [ ] Story 1.4b: Implement Npm Collector
+- [x] Story 1.4b: Implement Npm Collector
   > As a developer, I want mymise to inventory tools installed via npm globally, so that global Node.js CLI tools are captured with provenance.
   > AC: Given npm is available, When the NpmCollector runs, Then it returns DiscoveredTool objects with source=NPM for globally installed npm packages
   > AC: Given npm is not on PATH, When available() is called, Then it returns False and the scan continues without error
