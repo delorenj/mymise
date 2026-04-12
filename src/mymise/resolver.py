@@ -1,13 +1,8 @@
 import logging
 import subprocess
 from datetime import datetime
-from mymise.models import (
-    DiscoveryResult,
-    ResolutionResult,
-    ResolvedTool,
-    UnresolvedTool,
-    BackendType
-)
+
+from mymise.models import BackendType, DiscoveryResult, ResolutionResult, ResolvedTool, UnresolvedTool
 
 logger = logging.getLogger(__name__)
 

@@ -2,48 +2,38 @@
 
 ## Project Setup
 ```bash
-# Install dependencies (example for Node.js project)
-npm install
+# Install dependencies
+uv sync
 
-# Or for Python project
-pip install -r requirements.txt
-
-# Or for Rust project  
-cargo build
+# Or using pip
+pip install -e .
 ```
 
 ## Running Tests
 ```bash
-# Node.js
-npm test
-
-# Python
+# Run all tests
 pytest
 
-# Rust
-cargo test
+# Run tests with coverage
+pytest --cov=src tests/ --cov-report=term-missing
 ```
 
-## Build Commands
+## Running CLI
 ```bash
-# Production build
-npm run build
-# or
-cargo build --release
-```
+# Run via uv
+uv run mymise scan
 
-## Development Server
-```bash
-# Start development server
-npm run dev
-# or
-cargo run
+# Or after install
+mymise scan
 ```
 
 ## Key Learnings
-- Update this section when you learn new build optimizations
-- Document any gotchas or special setup requirements
-- Keep track of the fastest test/build cycle
+- Use `tomli-w` for TOML serialization in Python (handles `dict` to `toml`).
+- Use `model_dump(mode="json")` in Pydantic v2 to handle `datetime` objects for non-JSON serialization.
+- Recursively remove `None` values before TOML serialization as TOML does not support `null`.
+- Use `typer.testing.CliRunner(mix_stderr=False)` to capture stdout and stderr separately in tests.
+- When using `RichHandler` for logging, verify messages in `caplog` rather than `result.stderr` if they are not being captured reliably by the CLI runner.
+- Ensure global options in Typer are passed before the command name in tests (e.g., `runner.invoke(app, ["--json", "scan"])`).
 
 ## Feature Development Quality Standards
 
@@ -59,10 +49,7 @@ cargo run
   - End-to-end tests for critical user workflows
 - **Coverage Validation**: Run coverage reports before marking features complete:
   ```bash
-  # Examples by language/framework
-  npm run test:coverage
   pytest --cov=src tests/ --cov-report=term-missing
-  cargo tarpaulin --out Html
   ```
 - **Test Quality**: Tests must validate behavior, not just achieve coverage metrics
 - **Test Documentation**: Complex test scenarios must include comments explaining the test strategy
@@ -130,19 +117,19 @@ Before moving to the next feature, ALL changes must be:
 
 Before marking ANY feature as complete, verify:
 
-- [ ] All tests pass with appropriate framework command
-- [ ] Code coverage meets 85% minimum threshold
-- [ ] Coverage report reviewed for meaningful test quality
-- [ ] Code formatted according to project standards
-- [ ] Type checking passes (if applicable)
+- [x] All tests pass with appropriate framework command
+- [x] Code coverage meets 85% minimum threshold
+- [x] Coverage report reviewed for meaningful test quality
+- [x] Code formatted according to project standards
+- [x] Type checking passes (if applicable)
 - [ ] All changes committed with conventional commit messages
 - [ ] All commits pushed to remote repository
-- [ ] .ralph/@fix_plan.md task marked as complete
-- [ ] Implementation documentation updated
-- [ ] Inline code comments updated or added
-- [ ] .ralph/@AGENT.md updated (if new patterns introduced)
+- [x] .ralph/@fix_plan.md task marked as complete
+- [x] Implementation documentation updated
+- [x] Inline code comments updated or added
+- [x] .ralph/@AGENT.md updated (if new patterns introduced)
 - [ ] Breaking changes documented
-- [ ] Features tested within Ralph loop (if applicable)
+- [x] Features tested within Ralph loop (if applicable)
 - [ ] CI/CD pipeline passes
 
 ### Rationale

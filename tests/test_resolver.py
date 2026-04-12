@@ -1,8 +1,11 @@
-import pytest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
-from mymise.models import DiscoveryResult, DiscoveredTool, ToolSource, ToolCategory, BackendType
+
+import pytest
+
+from mymise.models import BackendType, DiscoveredTool, DiscoveryResult, ToolCategory, ToolSource
 from mymise.resolver import resolve
+
 
 @pytest.fixture
 def discovery_result():

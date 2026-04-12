@@ -21,7 +21,7 @@
 > Goal: **User Outcome:** Developer runs `mymise resolve` and knows exactly which tools mise can manage today vs. which need manual handling. **FRs covered:** FR-6, FR-7, FR-9 (partial, resolve subcommand flags) **NFRs addressed:** NFR-1, NFR-2 **Arch requirements:** AR-3, AR-5 **Dependencies:** Reads `mymise-discovery.json` from Epic 1
 
 - [x] Story 2.1: Implement Resolver with Mise Registry Lookup and Dry-Run Mode
-- [x] Story 2.2: Wire Resolve CLI Command with Flags and Rich Summary
+- [ ] Story 2.2: Wire Resolve CLI Command with Flags and Rich Summary
   > **Status:** Draft As a developer
   > I want to run `mymise resolve` with configurable input, output, timeout, and dry-run flags
   > So that I can control the resolution step from the command line.
@@ -36,8 +36,8 @@
 ### Registration & Bootstrap
 > Goal: **User Outcome:** Developer runs `mymise register` and gets a complete, portable environment specification (mise.toml + shorthands.toml + bootstrap.sh). **FRs covered:** FR-8, FR-9 (partial, register subcommand flags) **NFRs addressed:** NFR-5 **Arch requirements:** AR-3 **Dependencies:** Reads `mymise-resolved.json` from Epic 2
 
-- [ ] Story 3.1: Implement Registrar Artifact Generation
-  > **Status:** Draft As a developer
+- [x] Story 3.1: Implement Registrar Artifact Generation
+  > **Status:** Complete As a developer
   > I want mymise to generate mise.toml, shorthands.toml, and bootstrap.sh from my resolution results
   > So that I have a complete, portable environment specification I can use on any machine.
   > AC: Given a ResolutionResult with resolved tools, When the Registrar runs, Then it generates a `mise.toml` fragment listing all resolved tools at `@latest`, And each entry includes a comment with the backend source

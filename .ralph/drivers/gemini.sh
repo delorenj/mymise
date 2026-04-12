@@ -63,10 +63,7 @@ driver_build_command() {
         CLAUDE_CMD_ARGS+=("-o" "json")
     fi
 
-    # Session resume
-    if [[ "$CLAUDE_USE_CONTINUE" == "true" && -n "$session_id" ]]; then
-        CLAUDE_CMD_ARGS+=("-r" "$session_id")
-    fi
+    # Session resume disabled: Gemini -p mode returns empty on resumed sessions
 
     # Build prompt content from file + loop context
     local prompt_content
@@ -84,7 +81,9 @@ $prompt_content"
 }
 
 driver_supports_sessions() {
-    return 0
+    # Gemini -p mode doesn't support meaningful session resume
+    # Resumed sessions return empty output instead of continuing work
+    return 1
 }
 
 driver_supports_live_output() {

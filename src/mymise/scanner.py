@@ -2,8 +2,7 @@ import getpass
 import logging
 import socket
 import time
-from datetime import datetime, timezone
-from typing import Any, Type
+from datetime import UTC, datetime
 
 from mymise.collectors.apt import AptCollector
 from mymise.collectors.base import Collector
@@ -21,7 +20,7 @@ from mymise.models import DiscoveredTool, DiscoveryResult
 logger = logging.getLogger(__name__)
 
 # List of collector classes to be instantiated during scan
-COLLECTORS: list[Type[Collector]] = [
+COLLECTORS: list[type[Collector]] = [
     HistoryCollector,
     PathCollector,
     AptCollector,
@@ -35,21 +34,29 @@ COLLECTORS: list[Type[Collector]] = [
 ]
 
 
-def scan(history_file: str = "~/.zsh_history") -> DiscoveryResult:
+def scan(history_file: str = "~/.zsh_history", skip_pkg_managers: list[str] | None = None) -> DiscoveryResult:
     """Orchestrate all collectors and merge results into a DiscoveryResult.
 
     Args:
         history_file: Path to the shell history file (used by HistoryCollector).
+        skip_pkg_managers: List of package manager collector names to skip (e.g., ['cargo', 'npm']).
 
     Returns:
         A DiscoveryResult containing the merged list of discovered tools and metadata.
     """
     start_time = time.perf_counter()
-    scan_timestamp = datetime.now(timezone.utc)
+    scan_timestamp = datetime.now(UTC)
 
     all_discovered_tools: list[DiscoveredTool] = []
+    errors: list[str] = []
+    skip_list = skip_pkg_managers or []
 
     for collector_cls in COLLECTORS:
+        collector_name = getattr(collector_cls, "name", collector_cls.__name__)
+        if collector_name.lower() in [s.lower() for s in skip_list]:
+            logger.info(f"Skipping collector: {collector_name}")
+            continue
+
         try:
             # Instantiate collector
             if collector_cls == HistoryCollector:
@@ -65,11 +72,10 @@ def scan(history_file: str = "~/.zsh_history") -> DiscoveryResult:
             tools = collector.collect()
             all_discovered_tools.extend(tools)
         except Exception as e:
-            # Log warning and continue with other collectors if one fails
-            collector_name = getattr(collector_cls, "name", collector_cls.__name__)
-            logger.warning(
-                f"Collector {collector_name} failed ({type(e).__name__}): {e}"
-            )
+            # Log warning and track error
+            error_msg = f"Collector {collector_name} failed ({type(e).__name__}): {e}"
+            logger.warning(error_msg)
+            errors.append(error_msg)
             continue
 
     # Merge and deduplicate tools by name
@@ -83,6 +89,8 @@ def scan(history_file: str = "~/.zsh_history") -> DiscoveryResult:
         user=getpass.getuser(),
         scan_duration_seconds=duration,
         tools=merged_tools,
+        partial_failure=len(errors) > 0,
+        errors=errors,
     )
 
 
@@ -116,9 +124,8 @@ def _merge_tools(tools: list[DiscoveredTool]) -> list[DiscoveredTool]:
         existing.frequency = max(existing.frequency, tool.frequency)
 
         # Latest last_used timestamp
-        if tool.last_used:
-            if not existing.last_used or tool.last_used > existing.last_used:
-                existing.last_used = tool.last_used
+        if tool.last_used and (not existing.last_used or tool.last_used > existing.last_used):
+            existing.last_used = tool.last_used
 
         # Prefer non-None binary_path and category if not already set
         if not existing.binary_path and tool.binary_path:

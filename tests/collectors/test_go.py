@@ -1,6 +1,4 @@
-import os
 from unittest.mock import MagicMock, patch
-import subprocess
 
 from mymise.collectors.go import GoCollector
 from mymise.models import ToolSource

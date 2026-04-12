@@ -53,6 +53,8 @@ class DiscoveryResult(BaseModel):
     user: str
     scan_duration_seconds: float
     tools: list[DiscoveredTool]
+    partial_failure: bool = False
+    errors: list[str] = []
 
 
 class ResolvedTool(BaseModel):

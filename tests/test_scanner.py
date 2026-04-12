@@ -1,6 +1,7 @@
-import pytest
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from mymise.models import DiscoveredTool, ToolSource
 from mymise.scanner import scan
@@ -15,7 +16,7 @@ def mock_collectors():
         sources=[ToolSource.CARGO],
         installed_by=[ToolSource.CARGO],
         frequency=5,
-        last_used=datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+        last_used=datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC),
     )
     mock_cargo_cls = MagicMock()
     mock_cargo_cls.__name__ = "CargoCollector"
@@ -31,14 +32,14 @@ def mock_collectors():
         sources=[ToolSource.PATH],
         installed_by=[ToolSource.PATH],
         frequency=10,
-        last_used=datetime(2024, 1, 2, 12, 0, 0, tzinfo=timezone.utc),
+        last_used=datetime(2024, 1, 2, 12, 0, 0, tzinfo=UTC),
     )
     tool_bat_path = DiscoveredTool(
         name="bat",
         sources=[ToolSource.PATH],
         installed_by=[ToolSource.PATH],
         frequency=2,
-        last_used=datetime(2024, 1, 1, 10, 0, 0, tzinfo=timezone.utc),
+        last_used=datetime(2024, 1, 1, 10, 0, 0, tzinfo=UTC),
     )
     mock_path_cls = MagicMock()
     mock_path_cls.__name__ = "PathCollector"
@@ -89,7 +90,7 @@ def test_scan_merges_and_deduplicates(mock_collectors):
         rg = next(t for t in result.tools if t.name == "rg")
         assert set(rg.sources) == {ToolSource.CARGO, ToolSource.PATH}
         assert rg.frequency == 10  # max(5, 10)
-        assert rg.last_used == datetime(2024, 1, 2, 12, 0, 0, tzinfo=timezone.utc)  # most recent
+        assert rg.last_used == datetime(2024, 1, 2, 12, 0, 0, tzinfo=UTC)  # most recent
         assert set(rg.installed_by) == {ToolSource.CARGO, ToolSource.PATH}
 
         # Verify 'bat' (only one source)
@@ -113,6 +114,12 @@ def test_scan_handles_collector_exceptions(mock_collectors, caplog):
         assert "npm" in caplog.text
         assert "NPM failure" in caplog.text
 
+        # Verify errors are tracked in result
+        assert len(result.errors) == 1
+        assert "npm" in result.errors[0]
+        assert "NPM failure" in result.errors[0]
+        assert result.partial_failure is True
+
 
 def test_scan_populates_metadata(mock_collectors):
     """Verify that scan() populates DiscoveryResult metadata."""
@@ -135,7 +142,6 @@ def test_scan_passes_history_path_to_history_collector():
     mock_history_instance.collect.return_value = []
     
     with patch("mymise.scanner.COLLECTORS", [mock_history_cls]):
-        from mymise.collectors.history import HistoryCollector
         with patch("mymise.scanner.HistoryCollector", mock_history_cls):
             scan(history_file="/custom/path")
             mock_history_cls.assert_called_with(history_path="/custom/path")
