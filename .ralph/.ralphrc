@@ -11,17 +11,17 @@
 # =============================================================================
 
 # Platform driver for Ralph loop (claude-code, codex, opencode, copilot, or cursor)
-PLATFORM_DRIVER="${PLATFORM_DRIVER:-claude-code}"
+PLATFORM_DRIVER="${PLATFORM_DRIVER:-gemini}"
 
 # =============================================================================
 # PROJECT IDENTIFICATION
 # =============================================================================
 
 # Project name (used in prompts and logging)
-PROJECT_NAME="${PROJECT_NAME:-my-project}"
+PROJECT_NAME="${PROJECT_NAME:-mymise}"
 
 # Project type: javascript, typescript, python, rust, go, unknown
-PROJECT_TYPE="${PROJECT_TYPE:-unknown}"
+PROJECT_TYPE="${PROJECT_TYPE:-python}"
 
 # =============================================================================
 # LOOP SETTINGS
@@ -47,6 +47,7 @@ ALLOWED_TOOLS="Write,Read,Edit,MultiEdit,Glob,Grep,Task,TodoWrite,WebFetch,WebSe
 
 # Permission mode for Claude Code CLI (default: bypassPermissions)
 # Options: auto, acceptEdits, bypassPermissions, default, dontAsk, plan
+# Gemini uses --yolo instead of permission modes
 CLAUDE_PERMISSION_MODE="bypassPermissions"
 
 # How Ralph responds when a driver reports permission denials:
@@ -106,18 +107,18 @@ CB_AUTO_RESET=false
 # Test command to verify TESTS_STATUS claims (e.g. "npm test", "pytest")
 # When set, runs after each loop to confirm the agent's test status report.
 # Leave empty to trust the agent's TESTS_STATUS without verification.
-TEST_COMMAND="${TEST_COMMAND:-}"
+TEST_COMMAND="${TEST_COMMAND:-mise run test}"
 
 # Semicolon-separated quality gate commands (e.g. "npm run lint;npm run type-check")
 # Each command runs after the loop iteration completes.
 # Commands must not contain literal semicolons; use wrapper scripts if needed.
-QUALITY_GATES="${QUALITY_GATES:-}"
+QUALITY_GATES="${QUALITY_GATES:-mise run lint}"
 
 # Failure mode: warn | block | circuit-breaker
 #   warn            - log failures, continue normally (default)
 #   block           - suppress exit signal so the loop keeps running
 #   circuit-breaker - feed no-progress to circuit breaker
-QUALITY_GATE_MODE="${QUALITY_GATE_MODE:-warn}"
+QUALITY_GATE_MODE="${QUALITY_GATE_MODE:-circuit-breaker}"
 
 # Timeout in seconds for each gate command
 QUALITY_GATE_TIMEOUT="${QUALITY_GATE_TIMEOUT:-120}"

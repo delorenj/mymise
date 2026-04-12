@@ -1,6 +1,6 @@
 import os
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from mymise.models import DiscoveredTool, ToolSource
@@ -12,19 +12,64 @@ class HistoryCollector:
     name = "history"
 
     BUILTINS = {
-        "alias", "bg", "break", "builtin", "cd", "command", "continue", "declare",
-        "dirs", "disown", "echo", "enable", "eval", "exec", "exit", "export",
-        "false", "fc", "fg", "getopts", "hash", "help", "history", "jobs", "kill",
-        "let", "local", "logout", "popd", "printf", "pushd", "pwd", "read",
-        "readonly", "return", "set", "shift", "shopt", "source", "suspend",
-        "test", "times", "trap", "true", "type", "typeset", "ulimit", "umask",
-        "unalias", "unset", "wait", "[", "]", "{", "}"
+        "alias",
+        "bg",
+        "break",
+        "builtin",
+        "cd",
+        "command",
+        "continue",
+        "declare",
+        "dirs",
+        "disown",
+        "echo",
+        "enable",
+        "eval",
+        "exec",
+        "exit",
+        "export",
+        "false",
+        "fc",
+        "fg",
+        "getopts",
+        "hash",
+        "help",
+        "history",
+        "jobs",
+        "kill",
+        "let",
+        "local",
+        "logout",
+        "popd",
+        "printf",
+        "pushd",
+        "pwd",
+        "read",
+        "readonly",
+        "return",
+        "set",
+        "shift",
+        "shopt",
+        "source",
+        "suspend",
+        "test",
+        "times",
+        "trap",
+        "true",
+        "type",
+        "typeset",
+        "ulimit",
+        "umask",
+        "unalias",
+        "unset",
+        "wait",
+        "[",
+        "]",
+        "{",
+        "}",
     }
 
-    WRAPPERS = {
-        "sudo", "time", "watch", "which", "nohup", "valgrind", "nice", "xargs",
-        "parallel", "env"
-    }
+    WRAPPERS = {"sudo", "time", "watch", "which", "nohup", "valgrind", "nice", "xargs", "parallel", "env"}
 
     def __init__(self, history_path: str = "~/.zsh_history") -> None:
         self.history_path = history_path
@@ -46,7 +91,7 @@ class HistoryCollector:
 
         try:
             path = Path(self.history_path).expanduser()
-            with open(path, "r", encoding="utf-8", errors="replace") as f:
+            with open(path, encoding="utf-8", errors="replace") as f:
                 for line in f:
                     # Format: : 1712956800:0;ls -la
                     # We are lenient with the duration part (between colons)
@@ -57,7 +102,7 @@ class HistoryCollector:
                     ts_str, command_text = match.groups()
                     try:
                         ts = int(ts_str)
-                        dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+                        dt = datetime.fromtimestamp(ts, tz=UTC)
                     except (ValueError, OSError):
                         continue
 
@@ -101,7 +146,7 @@ class HistoryCollector:
                 continue
 
             parts = segment.split()
-            
+
             while parts:
                 cmd = parts[0]
 
@@ -119,10 +164,7 @@ class HistoryCollector:
                     break
 
                 # Handle absolute or relative paths by taking the basename
-                if cmd.startswith(("/", "./", "../")):
-                    name = os.path.basename(cmd)
-                else:
-                    name = cmd
+                name = os.path.basename(cmd) if cmd.startswith(("/", "./", "../")) else cmd
 
                 if name:
                     found.add(name)

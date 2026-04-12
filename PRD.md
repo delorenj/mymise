@@ -201,7 +201,7 @@ For unresolved tools, provide pathways to register them:
 ### NFR-1: Performance
 
 - Full scan completes in <30 seconds on a system with ~10K history entries and ~80 installed tools
-- Registry resolution for 200 tools completes in <60 seconds (parallelizable)
+- Registry resolution for 200 tools completes in <60 seconds using synchronous subprocess calls (parallelism deferred until needed per Architecture.md; a configurable per-call `--timeout` is supported)
 - Memory usage stays under 100MB for scan phase
 
 ### NFR-2: Reliability

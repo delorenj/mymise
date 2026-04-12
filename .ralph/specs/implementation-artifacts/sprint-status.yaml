@@ -1,0 +1,77 @@
+# generated: 2026-04-09
+# last_updated: 2026-04-09T14:30:00Z
+# project: mymise
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-04-09
+last_updated: 2026-04-09T14:30:00Z
+project: mymise
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 1: Tool Discovery
+  epic-1: in-progress
+  1-1-implement-zsh-history-collector: ready-for-dev
+  1-2-implement-path-binary-collector: backlog
+  1-3a-implement-apt-collector: backlog
+  1-3b-implement-snap-collector: backlog
+  1-3c-implement-mise-collector: backlog
+  1-4a-implement-cargo-collector: backlog
+  1-4b-implement-npm-collector: backlog
+  1-4c-implement-pipx-collector: backlog
+  1-4d-implement-go-collector: backlog
+  1-4e-implement-uv-collector: backlog
+  1-5-implement-scanner-orchestration-with-merge-and-deduplication: backlog
+  1-6-wire-scan-cli-command-with-json-toml-output-flags-and-rich-summary: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2: Registry Resolution
+  epic-2: backlog
+  2-1-implement-resolver-with-mise-registry-lookup-and-dry-run-mode: backlog
+  2-2-wire-resolve-cli-command-with-flags-and-rich-summary: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: Registration & Bootstrap
+  epic-3: backlog
+  3-1-implement-registrar-artifact-generation: backlog
+  3-2-wire-register-cli-command-with-flags-and-output-routing: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: CLI Integration & Full Pipeline
+  epic-4: backlog
+  4-1-implement-end-to-end-pipeline-command: backlog
+  4-2-cli-polish-and-error-handling: backlog
+  epic-4-retrospective: optional

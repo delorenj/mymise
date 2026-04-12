@@ -23,7 +23,7 @@ class PathCollector:
         for path_str in path_env.split(os.pathsep):
             if not path_str:
                 continue
-            
+
             p = Path(path_str)
             if not p.exists() or not p.is_dir():
                 continue
@@ -34,7 +34,7 @@ class PathCollector:
                         try:
                             resolved = entry.resolve()
                             resolved_str = str(resolved)
-                            
+
                             if resolved_str not in discovered:
                                 discovered[resolved_str] = DiscoveredTool(
                                     name=entry.name,

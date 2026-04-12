@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-04-12T12:58:52+00:00",
+  "loop_count": 2,
+  "calls_made_this_hour": 1,
+  "max_calls_per_hour": 100,
+  "last_action": "executing",
+  "status": "running",
+  "exit_reason": "",
+  "next_reset": "09:58:52",
+  "driver_exit_code": null,
+  "quality_gates": {
+    "overall_status": "fail",
+    "mode": "warn"
+  }
+}

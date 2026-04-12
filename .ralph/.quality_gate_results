@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-04-12T12:58:47+00:00",
+  "loop_number": 1,
+  "test_gate": {
+    "status": "pass",
+    "tests_status_reported": "UNKNOWN",
+    "verified": true,
+    "output": "[test] $ uv run pytest -v\n========================================================== test session starts ===========================================================\nplatform linux -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0 -- /home/delorenj/code/mymise/.venv/bin/python3\ncachedir: .pytest_cache\nrootdir: /home/delorenj/code/mymise\nconfigfile: pyproject.toml\ntestpaths: tests\nplugins: cov-7.0.0\ncollecting ... collected 22 items\n\ntests/collectors/test_history.py::test_history_collector_name PASSED"
+  },
+  "custom_gates": [
+    {
+      "command": "mise run lint",
+      "status": "fail",
+      "exit_code": 1,
+      "output": "[lint] $ uv run ruff check src/ tests/\nUP015 [*] Unnecessary mode argument\n  --> src/mymise/collectors/history.py:49:29\n   |\n47 |         try:\n48 |             path = Path(self.history_path).expanduser()\n49 |             with open(path, \"r\", encoding=\"utf-8\", errors=\"replace\") as f:\n   |                             ^^^\n50 |                 for line in f:\n51 |                     # Format: : 1712956800:0;ls -la\n   |\nhelp: Remove mode argument\n\nUP017 [*] Use `datetime.UTC` alias\n  --> src/mymise/c",
+      "duration_seconds": 0,
+      "timed_out": false
+    }
+  ],
+  "overall_status": "fail",
+  "mode": "warn"
+}

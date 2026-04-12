@@ -1,0 +1,108 @@
+# Workflow Status Template
+
+# This tracks progress through BMM methodology Analysis, Planning, and Solutioning phases.
+# Implementation phase is tracked separately in sprint-status.yaml
+
+# STATUS DEFINITIONS:
+# ==================
+# Initial Status (before completion):
+#   - required: Must be completed to progress
+#   - optional: Can be completed but not required
+#   - recommended: Strongly suggested but not required
+#   - conditional: Required only if certain conditions met (e.g., if_has_ui)
+#
+# Completion Status:
+#   - {file-path}: File created/found (e.g., "docs/product-brief.md")
+#   - skipped: Optional/conditional workflow that was skipped
+
+generated: "2026-03-19"
+project: "mymise"
+project_type: "cli-tool"
+selected_track: "method"
+field_type: "brownfield"
+workflow_path: "method-brownfield.yaml"
+workflow_status:
+  # Phase 0: Documentation (conditional - if undocumented)
+  - id: "document-project"
+    phase: 0
+    phase_name: "Documentation"
+    status: "skipped"  # PRD.md and Architecture.md exist at project root
+    agent: "analyst"
+    command: "/bmad:bmm:workflows:document-project"
+    note: "Existing PRD.md and Architecture.md found - codebase already documented"
+
+  # Phase 1: Analysis (Optional)
+  - id: "brainstorm-project"
+    phase: 1
+    phase_name: "Analysis"
+    status: "skipped"
+    agent: "analyst"
+    command: "/bmad:core:workflows:brainstorming"
+    note: "User did not select during init"
+
+  - id: "research"
+    phase: 1
+    phase_name: "Analysis"
+    status: "skipped"
+    agent: "analyst"
+    command: "/bmad:bmm:workflows:research"
+    note: "User did not select during init"
+
+  # Phase 2: Planning
+  - id: "prd"
+    phase: 2
+    phase_name: "Planning"
+    status: "PRD.md"  # Found at project root
+    agent: "pm"
+    command: "/bmad:bmm:workflows:prd"
+    note: "Existing PRD.md at project root (10KB, detailed)"
+
+  - id: "create-ux-design"
+    phase: 2
+    phase_name: "Planning"
+    status: "skipped"
+    agent: "ux-designer"
+    command: "/bmad:bmm:workflows:create-ux-design"
+    note: "CLI tool - no UI, not applicable"
+
+  # Phase 3: Solutioning
+  - id: "create-architecture"
+    phase: 3
+    phase_name: "Solutioning"
+    status: "Architecture.md"  # Found at project root
+    agent: "architect"
+    command: "/bmad:bmm:workflows:create-architecture"
+    note: "Existing Architecture.md at project root (10KB, comprehensive)"
+
+  - id: "create-epics-and-stories"
+    phase: 3
+    phase_name: "Solutioning"
+    status: "_bmad-output/planning-artifacts/epics.md"
+    agent: "pm"
+    command: "/bmad:bmm:workflows:create-epics-and-stories"
+    note: "4 epics, 12 stories, 100% FR coverage"
+
+  - id: "test-design"
+    phase: 3
+    phase_name: "Solutioning"
+    status: "optional"
+    agent: "tea"
+    command: "/bmad:bmm:workflows:testarch-test-design"
+    note: "System-level testability review"
+
+  - id: "implementation-readiness"
+    phase: 3
+    phase_name: "Solutioning"
+    status: "_bmad-output/planning-artifacts/implementation-readiness-report-2026-04-09.md"
+    agent: "architect"
+    command: "/bmad:bmm:workflows:check-implementation-readiness"
+    note: "Completed 2026-04-09. Initial verdict NEEDS WORK (4 major / 4 minor). All issues remediated in-session: Stories 1.3/1.4 split into per-collector stories; missing CLI flag ACs added to 1.6/2.1/2.2/3.2; PRD NFR-1 parallelizable contradiction reconciled with Architecture.md. Epic count: 4, Story count: 19 (up from 12)."
+
+  # Phase 4: Implementation
+  - id: "sprint-planning"
+    phase: 4
+    phase_name: "Implementation"
+    status: "required"
+    agent: "sm"
+    command: "/bmad:bmm:workflows:sprint-planning"
+    note: "Creates sprint plan - subsequent work tracked in sprint-status.yaml"
