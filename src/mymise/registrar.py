@@ -6,9 +6,10 @@ from mymise.models import ResolutionResult
 
 
 class Registrar:
-    def __init__(self, result: ResolutionResult, output_dir: Path | str = "."):
+    def __init__(self, result: ResolutionResult, output_dir: Path | str = ".", shorthands_file: str = "shorthands.toml"):
         self.result = result
         self.output_dir = Path(output_dir)
+        self.shorthands_file = shorthands_file
         self.version = "0.1.0"  # Could be loaded from pyproject.toml in a real scenario
 
     def generate_artifacts(self) -> dict[str, Path]:
@@ -17,7 +18,7 @@ class Registrar:
 
         artifacts = {
             "mise.toml": self._generate_mise_toml(),
-            "shorthands.toml": self._generate_shorthands_toml(),
+            self.shorthands_file: self._generate_shorthands_toml(),
             "bootstrap.sh": self._generate_bootstrap_sh(),
         }
 
@@ -37,13 +38,13 @@ class Registrar:
         # tomli_w doesn't easily support per-line comments, so we'll do it manually or just put a block comment
         content = [self._get_header(), "[tools]"]
         for rt in self.result.resolved:
-            content.append(f'{rt.name} = "latest"  # Source: {rt.backend}')
+            content.append(f'{rt.name} = "latest"  # Source: {rt.backend}:{rt.registry_entry}')
 
         path.write_text("\n".join(content) + "\n")
         return path
 
     def _generate_shorthands_toml(self) -> Path:
-        path = self.output_dir / "shorthands.toml"
+        path = self.output_dir / self.shorthands_file
         shorthands = {}
         
         github_pattern = re.compile(r"github:([a-zA-Z0-9\-\._/]+)")
@@ -117,6 +118,6 @@ class Registrar:
         return path
 
 
-def register(result: ResolutionResult, output_dir: Path | str = ".") -> dict[str, Path]:
-    registrar = Registrar(result, output_dir=output_dir)
+def register(result: ResolutionResult, output_dir: Path | str = ".", shorthands_file: str = "shorthands.toml") -> dict[str, Path]:
+    registrar = Registrar(result, output_dir=output_dir, shorthands_file=shorthands_file)
     return registrar.generate_artifacts()

@@ -1,4 +1,5 @@
 import logging
+import re
 from enum import StrEnum
 from pathlib import Path
 from typing import Any
@@ -11,7 +12,8 @@ from rich.table import Table
 
 from mymise.scanner import scan as run_scan
 from mymise.resolver import resolve as run_resolve
-from mymise.models import DiscoveryResult
+from mymise.registrar import register as run_register
+from mymise.models import DiscoveryResult, ResolutionResult
 
 app = typer.Typer(name="mymise", help="Reverse-engineer your CLI toolchain and resolve against mise registry.")
 console = Console(stderr=True)
@@ -111,6 +113,50 @@ def _print_resolve_summary(result) -> None:
         console.print(b_table)
 
 
+def _print_register_summary(artifacts: dict[str, Path], resolution: ResolutionResult) -> None:
+    """Print a rich summary of the registration results to stderr."""
+    console.print("\n[bold green]Registration Complete![/]", style="green")
+
+    table = Table(box=None)
+    table.add_column("Artifact", style="cyan")
+    table.add_column("Tools", justify="right", style="magenta")
+    table.add_column("Output Path", style="dim")
+
+    # Counts
+    resolved_count = len(resolution.resolved)
+    
+    # Calculate shorthands and fallback counts (re-mimicking Registrar logic roughly for summary)
+    github_pattern = re.compile(r"github:[a-zA-Z0-9\-\._/]+")
+    
+    shorthands_count = 0
+    fallback_count = 0
+    
+    for ut in resolution.unresolved:
+        is_github = any(github_pattern.search(action) for action in ut.suggested_actions)
+        if is_github:
+            shorthands_count += 1
+        else:
+            # Check if it has any install command
+            if any(any(x in action for x in ["apt install", "cargo install", "npm install", "pip install", "go install"]) 
+                   for action in ut.suggested_actions) or ut.suggested_actions:
+                fallback_count += 1
+
+    for name, path in artifacts.items():
+        count = 0
+        if name == "mise.toml":
+            count = resolved_count
+        elif name == "bootstrap.sh":
+            count = fallback_count
+        else:
+            # Assumed shorthands file
+            count = shorthands_count
+        
+        table.add_row(name, str(count), str(path))
+
+    console.print(table)
+    console.print(f"\nTotal Artifacts Generated: [bold]{len(artifacts)}[/]\n")
+
+
 @app.callback()
 def main(
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose output"),
@@ -189,10 +235,26 @@ def register(
     ctx: typer.Context,
     input_file: Path = typer.Option("mymise-resolved.json", "--input", "-i", help="Resolution JSON from resolve"),
     output_dir: Path = typer.Option(".", "--output-dir", "-d", help="Output directory for artifacts"),
+    shorthands_file: str = typer.Option("shorthands.toml", "--shorthands-file", help="Filename for personal registry shorthands"),
 ) -> None:
     """Generate mise artifacts from resolution results."""
-    console.print("[bold]mymise register[/] - not yet implemented", style="yellow")
-    raise typer.Exit(1)
+    if not input_file.exists():
+        console.print(f"[bold red]Error:[/] Input file {input_file} not found.", style="red")
+        raise typer.Exit(2)
+
+    try:
+        resolution = ResolutionResult.model_validate_json(input_file.read_text())
+    except Exception as e:
+        console.print(f"[bold red]Error:[/] Failed to parse resolution file: {e}", style="red")
+        raise typer.Exit(2)
+
+    artifacts = run_register(resolution, output_dir=output_dir, shorthands_file=shorthands_file)
+
+    if ctx.parent and ctx.parent.params.get("json"):
+        import json
+        print(json.dumps({k: str(v) for k, v in artifacts.items()}, indent=2))
+    else:
+        _print_register_summary(artifacts, resolution)
 
 
 @app.command(name="all")

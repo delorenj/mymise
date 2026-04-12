@@ -22,31 +22,13 @@
 
 - [x] Story 2.1: Implement Resolver with Mise Registry Lookup and Dry-Run Mode
 - [x] Story 2.2: Wire Resolve CLI Command with Flags and Rich Summary
-  > **Status:** Draft As a developer
-  > I want to run `mymise resolve` with configurable input, output, timeout, and dry-run flags
-  > So that I can control the resolution step from the command line.
-  > AC: Given a valid `mymise-discovery.json` exists, When the user runs `mymise resolve`, Then the ResolutionResult is written to `mymise-resolved.json` (default) or the path specified by `--output`
-  > AC: Given the user passes `--input /custom/path.json`, When the command runs, Then the resolver loads discovery data from the specified path
-  > AC: Given the user passes `--timeout 30`, When the resolver processes each tool, Then each `mise registry` subprocess call uses a 30-second timeout instead of the 10-second default
-  > AC: Given the user passes `--dry-run`, When the command runs, Then the resolver is invoked with `dry_run=True`, And no install probing occurs, And the ResolutionResult still reflects classification from `mise registry` output
-  > AC: Given a successful resolution without `--json`, When results are displayed, Then a Rich summary on stderr shows: resolved count, unresolved count, resolution percentage, and backend type distribution
-  > AC: Given the user passes `--json`, When the resolution completes, Then JSON is written to stdout instead of a file, And Rich formatting is suppressed on stderr
-  > AC: Given the input discovery JSON does not exist, When the user runs `mymise resolve`, Then a clear error message is printed to stderr via Rich, And exit code is 2 (fatal)
-  > Spec: specs/planning-artifacts/epics.md#story-2-2
 ### Registration & Bootstrap
 > Goal: **User Outcome:** Developer runs `mymise register` and gets a complete, portable environment specification (mise.toml + shorthands.toml + bootstrap.sh). **FRs covered:** FR-8, FR-9 (partial, register subcommand flags) **NFRs addressed:** NFR-5 **Arch requirements:** AR-3 **Dependencies:** Reads `mymise-resolved.json` from Epic 2
 
 - [x] Story 3.1: Implement Registrar Artifact Generation
-  > **Status:** Complete As a developer
-  > I want mymise to generate mise.toml, shorthands.toml, and bootstrap.sh from my resolution results
-  > So that I have a complete, portable environment specification I can use on any machine.
-  > AC: Given a ResolutionResult with resolved tools, When the Registrar runs, Then it generates a `mise.toml` fragment listing all resolved tools at `@latest`, And each entry includes a comment with the backend source
-  > AC: Given a ResolutionResult with unresolved tools that have GitHub provenance, When the Registrar runs, Then it generates `shorthands.toml` entries in `tool_name = "github:owner/repo"` format
-  > AC: Given unresolved tools without identifiable GitHub repos, When the Registrar runs, Then it generates `bootstrap.sh` with fallback install commands (e.g., `apt install`, `cargo install`), And the script includes header comments explaining provenance
-  > AC: Given all three artifacts are generated, When the output is written, Then each file includes a header comment with generation timestamp and mymise version
-  > Spec: specs/planning-artifacts/epics.md#story-3-1
-- [ ] Story 3.2: Wire Register CLI Command with Flags and Output Routing
+- [x] Story 3.2: Wire Register CLI Command with Flags and Output Routing
   > **Status:** Draft As a developer
+
   > I want to run `mymise register` with configurable input, output directory, and shorthands filename
   > So that I can route the generated artifacts anywhere I need them.
   > AC: Given a valid `mymise-resolved.json` exists, When the user runs `mymise register`, Then artifacts are written to the current directory (default) or the path specified by `--output-dir`
