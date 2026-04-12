@@ -12,12 +12,7 @@
 - [x] Story 1.3c: Implement Mise Collector
 - [x] Story 1.4a: Implement Cargo Collector
 - [x] Story 1.4b: Implement Npm Collector
-  > As a developer, I want mymise to inventory tools installed via npm globally, so that global Node.js CLI tools are captured with provenance.
-  > AC: Given npm is available, When the NpmCollector runs, Then it returns DiscoveredTool objects with source=NPM for globally installed npm packages
-  > AC: Given npm is not on PATH, When available() is called, Then it returns False and the scan continues without error
-  > AC: Given the npm subprocess exceeds 10 seconds, When the timeout fires, Then the collector returns an empty list and logs a warning
-  > Spec: specs/planning-artifacts/epics.md#story-1-4b | Files: src/mymise/collectors/npm.py, tests/collectors/test_npm.py
-- [ ] Story 1.4c: Implement Pipx Collector
+- [x] Story 1.4c: Implement Pipx Collector
   > As a developer, I want mymise to inventory tools installed via pipx, so that isolated Python CLI applications are captured with provenance.
   > AC: Given pipx is available, When the PipxCollector runs, Then it returns DiscoveredTool objects with source=PIPX for installed pipx applications
   > AC: Given pipx is not on PATH, When available() is called, Then it returns False and the scan continues without error
