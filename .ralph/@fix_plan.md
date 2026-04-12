@@ -13,11 +13,6 @@
 - [x] Story 1.4a: Implement Cargo Collector
 - [x] Story 1.4b: Implement Npm Collector
 - [x] Story 1.4c: Implement Pipx Collector
-  > As a developer, I want mymise to inventory tools installed via pipx, so that isolated Python CLI applications are captured with provenance.
-  > AC: Given pipx is available, When the PipxCollector runs, Then it returns DiscoveredTool objects with source=PIPX for installed pipx applications
-  > AC: Given pipx is not on PATH, When available() is called, Then it returns False and the scan continues without error
-  > AC: Given the pipx subprocess exceeds 10 seconds, When the timeout fires, Then the collector returns an empty list and logs a warning
-  > Spec: specs/planning-artifacts/epics.md#story-1-4c | Files: src/mymise/collectors/pipx.py, tests/collectors/test_pipx.py
 - [ ] Story 1.4d: Implement Go Collector
   > As a developer, I want mymise to inventory tools installed via go install, so that Go ecosystem binaries are captured with provenance.
   > AC: Given go is available, When the GoCollector runs, Then it returns DiscoveredTool objects with source=GO for installed go binaries
