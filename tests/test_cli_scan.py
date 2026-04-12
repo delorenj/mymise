@@ -1,19 +1,21 @@
 import json
-import tomli
-from pathlib import Path
+import logging
+import tomllib
+from datetime import UTC, datetime
 from unittest.mock import patch
-from typer.testing import CliRunner
-from mymise.cli import app
-from mymise.models import DiscoveryResult, DiscoveredTool, ToolSource
-from datetime import datetime, timezone
-import pytest
 
-runner = CliRunner(mix_stderr=False)
+import pytest
+from typer.testing import CliRunner
+
+from mymise.cli import app
+from mymise.models import DiscoveredTool, DiscoveryResult, ToolSource
+
+runner = CliRunner()
 
 @pytest.fixture
 def mock_scan_result():
     return DiscoveryResult(
-        scan_timestamp=datetime.now(timezone.utc),
+        scan_timestamp=datetime.now(UTC),
         hostname="test-host",
         user="test-user",
         scan_duration_seconds=1.5,
@@ -27,12 +29,12 @@ def mock_scan_result():
 @pytest.fixture
 def mock_partial_scan_result():
     return DiscoveryResult(
-        scan_timestamp=datetime.now(timezone.utc),
+        scan_timestamp=datetime.now(UTC),
         hostname="test-host",
         user="test-user",
         scan_duration_seconds=1.5,
         tools=[
-            DiscoveredTool(name="ls", sources=[ToolSource.HISTORY], frequency=10)
+            DiscoveredTool(name="bat", sources=[ToolSource.PATH], frequency=1),
         ],
         partial_failure=True,
         errors=["AptCollector failed (RuntimeError): Test error"]
@@ -84,7 +86,7 @@ def test_scan_format_toml(tmp_path, monkeypatch, mock_scan_result):
         assert result.exit_code == 0
         assert (tmp_path / "out.toml").exists()
         with open(tmp_path / "out.toml", "rb") as f:
-            data = tomli.load(f)
+            data = tomllib.load(f)
         assert data["hostname"] == "test-host"
         assert len(data["tools"]) == 2
 
@@ -94,17 +96,17 @@ def test_scan_json_flag(tmp_path, monkeypatch, mock_scan_result):
     with patch("mymise.cli.run_scan", return_value=mock_scan_result):
         result = runner.invoke(app, ["--json", "scan"])
         assert result.exit_code == 0
-        
+
         # JSON should be in stdout
         data = json.loads(result.stdout)
         assert data["hostname"] == "test-host"
-        
+
         # No file should be created
         assert not (tmp_path / "mymise-discovery.json").exists()
-        
-        # Rich summary should NOT be on stderr
-        assert "Scan Complete!" not in result.stderr
-        assert "Discovery" not in result.stderr
+
+        # Rich summary should NOT be on stdout/stderr (since we mix)
+        assert "Scan Complete!" not in result.output
+        assert "Discovery" not in result.output
 
 def test_scan_rich_summary_stderr(tmp_path, monkeypatch, mock_scan_result):
     """AC: Successful scan without --json shows Rich table on stderr."""
@@ -112,14 +114,14 @@ def test_scan_rich_summary_stderr(tmp_path, monkeypatch, mock_scan_result):
     with patch("mymise.cli.run_scan", return_value=mock_scan_result):
         result = runner.invoke(app, ["scan"])
         assert result.exit_code == 0
-        
-        # Rich summary should be on stderr
-        assert "Scan Complete!" in result.stderr
-        assert "Discovery" in result.stderr
-        assert "Sources" in result.stderr
-        assert "Top 10" in result.stderr
+
+        # Rich summary should be in output
+        assert "Scan Complete!" in result.output
+        assert "Discovery" in result.output
+        assert "Sources" in result.output
+        assert "Top 10" in result.output
         # Tools count
-        assert "Total Unique Tools Discovered: 2" in result.stderr
+        assert "Total Unique Tools Discovered: 2" in result.output
 
 def test_scan_partial_failure_exit_code(tmp_path, monkeypatch, mock_partial_scan_result):
     """AC: Partial failures (some collectors failed) exit code 1 and warnings on stderr."""
@@ -127,7 +129,7 @@ def test_scan_partial_failure_exit_code(tmp_path, monkeypatch, mock_partial_scan
     with patch("mymise.cli.run_scan", return_value=mock_partial_scan_result):
         result = runner.invoke(app, ["scan"])
         assert result.exit_code == 1
-        
-        # Warnings on stderr
-        assert "Warnings (Partial Failures):" in result.stderr
-        assert "AptCollector failed (RuntimeError): Test error" in result.stderr
+
+        # Warnings on output
+        assert "Warnings (Partial Failures):" in result.output
+        assert "AptCollector failed (RuntimeError): Test error" in result.output

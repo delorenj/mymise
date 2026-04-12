@@ -1,3 +1,4 @@
+import logging
 from enum import StrEnum
 from pathlib import Path
 from typing import Any
@@ -5,12 +6,24 @@ from typing import Any
 import tomli_w
 import typer
 from rich.console import Console
+from rich.logging import RichHandler
 from rich.table import Table
 
 from mymise.scanner import scan as run_scan
+from mymise.resolver import resolve as run_resolve
+from mymise.models import DiscoveryResult
 
 app = typer.Typer(name="mymise", help="Reverse-engineer your CLI toolchain and resolve against mise registry.")
 console = Console(stderr=True)
+
+# Configure structured logger using RichHandler
+logging.basicConfig(
+    level="INFO",
+    format="%(message)s",
+    datefmt="[%X]",
+    handlers=[RichHandler(console=console, rich_tracebacks=True)]
+)
+logger = logging.getLogger("mymise")
 
 DEFAULT_HISTORY = Path.home() / ".zsh_history"
 
@@ -18,22 +31,6 @@ DEFAULT_HISTORY = Path.home() / ".zsh_history"
 class OutputFormat(StrEnum):
     JSON = "json"
     TOML = "toml"
-
-
-class AppState:
-    def __init__(self, verbose: bool = False, json_output: bool = False) -> None:
-        self.verbose = verbose
-        self.json_output = json_output
-
-
-@app.callback()
-def main(
-    ctx: typer.Context,
-    verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose output"),
-    json_output: bool = typer.Option(False, "--json", "-j", help="Output JSON to stdout"),
-) -> None:
-    ctx.ensure_object(dict)
-    ctx.obj = AppState(verbose=verbose, json_output=json_output)
 
 
 def _remove_none_values(data: Any) -> Any:
@@ -84,6 +81,45 @@ def _print_scan_summary(result) -> None:
             console.print(f"  [yellow]![/] {error}")
 
 
+def _print_resolve_summary(result) -> None:
+    """Print a rich summary of the resolution results to stderr."""
+    console.print("\n[bold green]Resolution Complete![/]", style="green")
+    
+    table = Table(box=None)
+    table.add_column("Metric", style="cyan")
+    table.add_column("Value", justify="right", style="magenta")
+    
+    table.add_row("Resolved Tools", str(len(result.resolved)))
+    table.add_row("Unresolved Tools", str(len(result.unresolved)))
+    table.add_row("Resolution Rate", f"{result.resolution_rate * 100:.1f}%")
+    
+    console.print(table)
+    
+    # Backend distribution
+    backend_counts = {}
+    for tool in result.resolved:
+        backend_counts[tool.backend] = backend_counts.get(tool.backend, 0) + 1
+    
+    if backend_counts:
+        console.print("\n[bold]Backend Distribution:[/]")
+        b_table = Table(box=None)
+        b_table.add_column("Backend", style="yellow")
+        b_table.add_column("Count", justify="right")
+        
+        for backend in sorted(backend_counts.keys()):
+            b_table.add_row(str(backend), str(backend_counts[backend]))
+        console.print(b_table)
+
+
+@app.callback()
+def main(
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose output"),
+    json: bool = typer.Option(False, "--json", "-j", help="Output JSON to stdout and suppress summary"),
+) -> None:
+    if verbose:
+        logger.setLevel(logging.DEBUG)
+
+
 @app.command()
 def scan(
     ctx: typer.Context,
@@ -93,12 +129,11 @@ def scan(
     format: OutputFormat = typer.Option(OutputFormat.JSON, "--format", "-f", help="Output format (json or toml)"),
 ) -> None:
     """Scan the system for CLI tools."""
-    state: AppState = ctx.obj
     skip_list = [s.strip() for s in skip_pkg_managers.split(",") if s.strip()]
 
     result = run_scan(history_file=str(history_file), skip_pkg_managers=skip_list)
 
-    if state.json_output:
+    if ctx.parent and ctx.parent.params.get("json"):
         # Output JSON to stdout, suppress everything else
         print(result.model_dump_json(indent=2))
     else:
@@ -126,10 +161,27 @@ def resolve(
     ctx: typer.Context,
     input_file: Path = typer.Option("mymise-discovery.json", "--input", "-i", help="Discovery JSON from scan"),
     output: Path = typer.Option("mymise-resolved.json", "--output", "-o", help="Output JSON file"),
+    timeout: int = typer.Option(10, "--timeout", "-t", help="Timeout for each mise registry call"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Skip install probing, only classify"),
 ) -> None:
     """Resolve discovered tools against mise registry."""
-    console.print("[bold]mymise resolve[/] - not yet implemented", style="yellow")
-    raise typer.Exit(1)
+    if not input_file.exists():
+        console.print(f"[bold red]Error:[/] Input file {input_file} not found.", style="red")
+        raise typer.Exit(2)
+    
+    try:
+        discovery = DiscoveryResult.model_validate_json(input_file.read_text())
+    except Exception as e:
+        console.print(f"[bold red]Error:[/] Failed to parse discovery file: {e}", style="red")
+        raise typer.Exit(2)
+    
+    result = run_resolve(discovery, timeout=timeout, dry_run=dry_run)
+    
+    if ctx.parent and ctx.parent.params.get("json"):
+        print(result.model_dump_json(indent=2))
+    else:
+        output.write_text(result.model_dump_json(indent=2))
+        _print_resolve_summary(result)
 
 
 @app.command()

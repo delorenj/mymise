@@ -17,31 +17,11 @@
 - [x] Story 1.4e: Implement Uv Collector
 - [x] Story 1.5: Implement Scanner Orchestration with Merge and Deduplication
 - [x] Story 1.6: Wire Scan CLI Command with JSON/TOML Output, Flags, and Rich Summary
-  > **Status:** Draft As a developer
-  > I want to run `mymise scan` with the full documented flag set and see a Rich summary on stderr with the serialized manifest written to a file
-  > So that I can control input sources, output format, and package manager inclusion.
-  > AC: Given the user runs `mymise scan`, When the scan completes, Then the DiscoveryResult is written to `mymise-discovery.json` (default) or the path specified by `--output`
-  > AC: Given the user passes `--history-file /custom/path`, When the scan runs, Then the HistoryCollector reads from the specified path instead of `~/.zsh_history`
-  > AC: Given the user passes `--skip-pkg-managers cargo,npm`, When the scan runs, Then the CargoCollector and NpmCollector are excluded from the collector list, And all other collectors run normally
-  > AC: Given the user passes `--format toml`, When the scan completes, Then the DiscoveryResult is serialized as TOML and written to the output path
-  > AC: Given the user passes `--json`, When the scan completes, Then the JSON is written to stdout instead of a file, And Rich formatting is suppressed on stderr
-  > AC: Given a successful scan without `--json`, When results are displayed, Then a Rich table on stderr shows tool count, source breakdown, and top 10 by frequency
-  > AC: Given the scan has partial failures (some collectors failed), When the command exits, Then exit code is 1 (partial failure) and warnings are printed to stderr via the project's structured logger
-  > Spec: specs/planning-artifacts/epics.md#story-1-6
 ### Registry Resolution
 > Goal: **User Outcome:** Developer runs `mymise resolve` and knows exactly which tools mise can manage today vs. which need manual handling. **FRs covered:** FR-6, FR-7, FR-9 (partial, resolve subcommand flags) **NFRs addressed:** NFR-1, NFR-2 **Arch requirements:** AR-3, AR-5 **Dependencies:** Reads `mymise-discovery.json` from Epic 1
 
 - [x] Story 2.1: Implement Resolver with Mise Registry Lookup and Dry-Run Mode
-  > **Status:** Complete As a developer
-  > I want mymise to check each discovered tool against the mise registry (with a dry-run preview mode)
-  > So that I know which tools can be managed by mise and I can preview the resolution plan without side effects.
-  > AC: Given a DiscoveryResult JSON file with discovered tools, When the Resolver processes each tool, Then it calls `mise registry <tool_name>` via subprocess for each tool, And parses the tab-separated output to extract backend type and registry entry
-  > AC: Given a tool that exists in the mise registry, When the registry lookup succeeds, Then the tool is classified as `ResolvedTool` with backend, registry_entry, and install_command populated
-  > AC: Given a tool that does not exist in the mise registry, When `mise registry <tool>` returns empty output or exit code 1, Then the tool is classified as `UnresolvedTool` with `suggested_actions` populated
-  > AC: Given `mise registry <tool>` hangs or times out, When the subprocess timeout fires (configurable, default 10s), Then the tool is classified as unresolved with a timeout warning logged via the project's structured logger, And resolution continues with remaining tools
-  > AC: Given `dry_run=True` is passed to `resolve()`, When resolution runs, Then `mise registry <tool>` is still called for classification (read-only), And no install probing or mutating subprocess calls occur, And the structured logger records the planned registry lookups with a `dry_run=true` tag
-  > Spec: specs/planning-artifacts/epics.md#story-2-1
-- [ ] Story 2.2: Wire Resolve CLI Command with Flags and Rich Summary
+- [x] Story 2.2: Wire Resolve CLI Command with Flags and Rich Summary
   > **Status:** Draft As a developer
   > I want to run `mymise resolve` with configurable input, output, timeout, and dry-run flags
   > So that I can control the resolution step from the command line.
