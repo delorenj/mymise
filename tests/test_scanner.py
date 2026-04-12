@@ -141,7 +141,9 @@ def test_scan_passes_history_path_to_history_collector():
     mock_history_instance.available.return_value = True
     mock_history_instance.collect.return_value = []
     
-    with patch("mymise.scanner.COLLECTORS", [mock_history_cls]):
-        with patch("mymise.scanner.HistoryCollector", mock_history_cls):
-            scan(history_file="/custom/path")
-            mock_history_cls.assert_called_with(history_path="/custom/path")
+    with (
+        patch("mymise.scanner.COLLECTORS", [mock_history_cls]),
+        patch("mymise.scanner.HistoryCollector", mock_history_cls),
+    ):
+        scan(history_file="/custom/path")
+        mock_history_cls.assert_called_with(history_path="/custom/path")

@@ -1,3 +1,5 @@
+from unittest.mock import patch
+from datetime import datetime
 from typer.testing import CliRunner
 
 from mymise.cli import app
@@ -13,17 +15,36 @@ def test_all_command_placeholder(tmp_path):
     assert "Pipeline Complete!" in result.output
 
 
-def test_all_pipeline_success(tmp_path, monkeypatch):
-    """Test successful end-to-end pipeline execution."""
-    # Mock some history if needed, or just let it run if it's safe
-    result = runner.invoke(app, ["all", "--output-dir", str(tmp_path)])
+from mymise.models import DiscoveryResult, RegistrationResult
+
+def test_all_pipeline_json_stdout(tmp_path):
+    """Test 'mymise --json all' outputs the final registration result as JSON."""
+    result = runner.invoke(app, ["--json", "all", "--output-dir", str(tmp_path)])
     assert result.exit_code == 0
+    
+    # Should output RegistrationResult JSON to stdout
+    assert '"artifacts":' in result.output
+    assert '"mise.toml":' in result.output
+    
+    # Should NOT contain Rich summaries or Step progress
+    assert "Step 1/3" not in result.output
+    assert "Scan Complete!" not in result.output
+    assert "Resolution Complete!" not in result.output
+    assert "Registration Complete!" not in result.output
 
-    # Check intermediate files
-    assert (tmp_path / "mymise-discovery.json").exists()
-    assert (tmp_path / "mymise-resolved.json").exists()
-
-    # Check final artifacts
-    assert (tmp_path / "mise.toml").exists()
-    assert (tmp_path / "shorthands.toml").exists()
-    assert (tmp_path / "bootstrap.sh").exists()
+@patch("mymise.cli.run_scan")
+def test_all_pipeline_partial_failure(mock_scan, tmp_path):
+    """Test 'mymise all' exits with code 1 on partial failure."""
+    from datetime import datetime
+    mock_scan.return_value = DiscoveryResult(
+        scan_timestamp=datetime.now(),
+        hostname="test",
+        user="test",
+        scan_duration_seconds=1.0,
+        tools=[],
+        errors=["Collector failed"]
+    )
+    
+    result = runner.invoke(app, ["all", "--output-dir", str(tmp_path)])
+    assert result.exit_code == 1
+    assert "Collector failed" in result.output

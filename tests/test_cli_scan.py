@@ -1,5 +1,4 @@
 import json
-import logging
 import tomllib
 from datetime import UTC, datetime
 from unittest.mock import patch

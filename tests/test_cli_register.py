@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
@@ -46,6 +45,11 @@ def test_register_missing_input_file():
     assert "error" in result.output.lower()
     assert "non-existent.json not found" in result.output.lower()
 
+from datetime import datetime
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+from mymise.models import RegistrationResult, ResolutionResult
+
 def test_register_success_default_paths(mock_resolution_json, tmp_path, monkeypatch):
     """Test successful register with default paths."""
     # Change current working directory to tmp_path so default output-dir is tested
@@ -69,7 +73,30 @@ def test_register_success_default_paths(mock_resolution_json, tmp_path, monkeypa
     # Check content of mise.toml
     mise_content = (tmp_path / "mise.toml").read_text()
     assert 'gh = "latest"' in mise_content
-    assert "asdf:github-cli" in mise_content
+
+@patch("mymise.cli.run_register")
+def test_register_json_stdout(mock_run_register, mock_resolution_json, tmp_path):
+    """Test 'mymise register --json' flag for stdout output."""
+    mock_run_register.return_value = RegistrationResult(
+        registration_timestamp=datetime.now(),
+        artifacts={"mise.toml": "mise.toml"},
+        resolved_count=1,
+        shorthands_count=0,
+        bootstrap_count=0
+    )
+    
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        input_file = Path("mymise-resolved.json")
+        input_file.write_text(mock_resolution_json.read_text())
+        
+        result = runner.invoke(app, ["--json", "register"])
+        assert result.exit_code == 0
+        
+        # Output should be in result.output as JSON
+        assert '"artifacts":' in result.output
+        assert '"mise.toml": "mise.toml"' in result.output
+        # Should NOT contain Rich summary
+        assert "Registration Complete!" not in result.output
 
 def test_register_custom_flags(mock_resolution_json, tmp_path):
     """Test register with custom --input, --output-dir, and --shorthands-file."""

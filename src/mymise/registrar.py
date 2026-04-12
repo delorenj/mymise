@@ -1,8 +1,9 @@
+import contextlib
 import re
 from datetime import datetime
 from pathlib import Path
 
-from mymise.models import ResolutionResult
+from mymise.models import RegistrationResult, ResolutionResult
 
 
 class Registrar:
@@ -12,17 +13,38 @@ class Registrar:
         self.shorthands_file = shorthands_file
         self.version = "0.1.0"  # Could be loaded from pyproject.toml in a real scenario
 
-    def generate_artifacts(self) -> dict[str, Path]:
+    def generate_artifacts(self) -> RegistrationResult:
         """Generate mise.toml, shorthands.toml, and bootstrap.sh."""
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
+        github_pattern = re.compile(r"github:[a-zA-Z0-9\-\._/]+")
+        
+        # Calculate counts for summary/result
+        shorthands_count = 0
+        bootstrap_count = 0
+        
+        for ut in self.result.unresolved:
+            is_github = any(github_pattern.search(action) for action in ut.suggested_actions)
+            if is_github:
+                shorthands_count += 1
+            else:
+                pkgs = ["apt install", "cargo install", "npm install", "pip install", "go install"]
+                if any(any(x in action for x in pkgs) for action in ut.suggested_actions) or ut.suggested_actions:
+                    bootstrap_count += 1
+
         artifacts = {
-            "mise.toml": self._generate_mise_toml(),
-            self.shorthands_file: self._generate_shorthands_toml(),
-            "bootstrap.sh": self._generate_bootstrap_sh(),
+            "mise.toml": str(self._generate_mise_toml()),
+            self.shorthands_file: str(self._generate_shorthands_toml()),
+            "bootstrap.sh": str(self._generate_bootstrap_sh()),
         }
 
-        return artifacts
+        return RegistrationResult(
+            registration_timestamp=datetime.now(),
+            artifacts=artifacts,
+            resolved_count=len(self.result.resolved),
+            shorthands_count=shorthands_count,
+            bootstrap_count=bootstrap_count,
+        )
 
     def _get_header(self) -> str:
         timestamp = datetime.now().isoformat(sep=" ", timespec="seconds")
@@ -34,7 +56,7 @@ class Registrar:
 
     def _generate_mise_toml(self) -> Path:
         path = self.output_dir / "mise.toml"
-        
+
         # tomli_w doesn't easily support per-line comments, so we'll do it manually or just put a block comment
         content = [self._get_header(), "[tools]"]
         for rt in self.result.resolved:
@@ -46,7 +68,7 @@ class Registrar:
     def _generate_shorthands_toml(self) -> Path:
         path = self.output_dir / self.shorthands_file
         shorthands = {}
-        
+
         github_pattern = re.compile(r"github:([a-zA-Z0-9\-\._/]+)")
 
         for ut in self.result.unresolved:
@@ -57,7 +79,7 @@ class Registrar:
                     if "/" in repo:
                         shorthands[ut.name] = f"github:{repo}"
                         break
-        
+
         content = [self._get_header()]
         for name, repo in shorthands.items():
             content.append(f'{name} = "{repo}"')
@@ -67,7 +89,7 @@ class Registrar:
 
     def _generate_bootstrap_sh(self) -> Path:
         path = self.output_dir / "bootstrap.sh"
-        
+
         content = [
             "#!/usr/bin/env bash",
             self._get_header(),
@@ -76,30 +98,31 @@ class Registrar:
         ]
 
         github_pattern = re.compile(r"github:[a-zA-Z0-9\-\._/]+")
-        
+
         any_tools = False
         for ut in self.result.unresolved:
             # Check if it was NOT a GitHub tool (those go to shorthands.toml)
             is_github = any(github_pattern.search(action) for action in ut.suggested_actions)
             if is_github:
                 continue
-            
+
             # Find a command-like suggestion
             install_cmd = None
+            pkgs = ["apt install", "cargo install", "npm install", "pip install", "go install"]
             for action in ut.suggested_actions:
-                if any(x in action for x in ["apt install", "cargo install", "npm install", "pip install", "go install"]):
+                if any(x in action for x in pkgs):
                     install_cmd = action
                     break
-            
+
             if not install_cmd and ut.suggested_actions:
                 install_cmd = ut.suggested_actions[0]
-            
+
             if install_cmd:
                 any_tools = True
                 source = "unknown"
                 if ut.original.installed_by:
                     source = ", ".join([str(s) for s in ut.original.installed_by])
-                
+
                 content.append(f"# Tool: {ut.name}")
                 content.append(f"# Source: {source}")
                 content.append(f"{install_cmd}")
@@ -110,14 +133,14 @@ class Registrar:
 
         path.write_text("\n".join(content) + "\n")
         # Make executable
-        try:
+        with contextlib.suppress(OSError):
             path.chmod(0o755)
-        except OSError:
-            pass
-            
+
         return path
 
 
-def register(result: ResolutionResult, output_dir: Path | str = ".", shorthands_file: str = "shorthands.toml") -> dict[str, Path]:
+def register(
+    result: ResolutionResult, output_dir: Path | str = ".", shorthands_file: str = "shorthands.toml"
+) -> RegistrationResult:
     registrar = Registrar(result, output_dir=output_dir, shorthands_file=shorthands_file)
     return registrar.generate_artifacts()

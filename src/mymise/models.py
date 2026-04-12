@@ -77,3 +77,16 @@ class ResolutionResult(BaseModel):
     resolved: list[ResolvedTool]
     unresolved: list[UnresolvedTool]
     resolution_rate: float
+    partial_failure: bool = False
+    errors: list[str] = []
+
+
+class RegistrationResult(BaseModel):
+    schema_version: str = "1.0.0"
+    registration_timestamp: datetime
+    artifacts: dict[str, str]  # name -> path
+    resolved_count: int
+    shorthands_count: int
+    bootstrap_count: int
+    partial_failure: bool = False
+    errors: list[str] = []

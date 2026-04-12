@@ -10,7 +10,7 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.table import Table
 
-from mymise.models import DiscoveryResult, ResolutionResult
+from mymise.models import DiscoveryResult, RegistrationResult, ResolutionResult
 from mymise.registrar import register as run_register
 from mymise.resolver import resolve as run_resolve
 from mymise.scanner import scan as run_scan
@@ -112,8 +112,13 @@ def _print_resolve_summary(result) -> None:
             b_table.add_row(str(backend), str(backend_counts[backend]))
         console.print(b_table)
 
+    if result.errors:
+        console.print("\n[bold yellow]Warnings (Partial Failures):[/]")
+        for error in result.errors:
+            console.print(f"  [yellow]![/] {error}")
 
-def _print_register_summary(artifacts: dict[str, Path], resolution: ResolutionResult) -> None:
+
+def _print_register_summary(result: RegistrationResult) -> None:
     """Print a rich summary of the registration results to stderr."""
     console.print("\n[bold green]Registration Complete![/]", style="green")
 
@@ -122,39 +127,25 @@ def _print_register_summary(artifacts: dict[str, Path], resolution: ResolutionRe
     table.add_column("Tools", justify="right", style="magenta")
     table.add_column("Output Path", style="dim")
 
-    # Counts
-    resolved_count = len(resolution.resolved)
-
-    # Calculate shorthands and fallback counts (re-mimicking Registrar logic roughly for summary)
-    github_pattern = re.compile(r"github:[a-zA-Z0-9\-\._/]+")
-
-    shorthands_count = 0
-    fallback_count = 0
-
-    for ut in resolution.unresolved:
-        is_github = any(github_pattern.search(action) for action in ut.suggested_actions)
-        if is_github:
-            shorthands_count += 1
-        else:
-            # Check if it has any install command
-            pkgs = ["apt install", "cargo install", "npm install", "pip install", "go install"]
-            if any(any(x in action for x in pkgs) for action in ut.suggested_actions) or ut.suggested_actions:
-                fallback_count += 1
-
-    for name, path in artifacts.items():
+    for name, path in result.artifacts.items():
         count = 0
         if name == "mise.toml":
-            count = resolved_count
+            count = result.resolved_count
         elif name == "bootstrap.sh":
-            count = fallback_count
+            count = result.bootstrap_count
         else:
             # Assumed shorthands file
-            count = shorthands_count
+            count = result.shorthands_count
 
         table.add_row(name, str(count), str(path))
 
     console.print(table)
-    console.print(f"\nTotal Artifacts Generated: [bold]{len(artifacts)}[/]\n")
+    console.print(f"\nTotal Artifacts Generated: [bold]{len(result.artifacts)}[/]\n")
+
+    if result.errors:
+        console.print("\n[bold yellow]Warnings (Partial Failures):[/]")
+        for error in result.errors:
+            console.print(f"  [yellow]![/] {error}")
 
 
 @app.callback()
@@ -228,6 +219,9 @@ def resolve(
     else:
         output.write_text(result.model_dump_json(indent=2))
         _print_resolve_summary(result)
+        
+    if result.errors or result.partial_failure:
+        raise typer.Exit(1)
 
 
 @app.command()
@@ -250,14 +244,15 @@ def register(
         console.print(f"[bold red]Error:[/] Failed to parse resolution file: {e}", style="red")
         raise typer.Exit(2) from e
 
-    artifacts = run_register(resolution, output_dir=output_dir, shorthands_file=shorthands_file)
+    result = run_register(resolution, output_dir=output_dir, shorthands_file=shorthands_file)
 
     if ctx.parent and ctx.parent.params.get("json"):
-        import json
-
-        print(json.dumps({k: str(v) for k, v in artifacts.items()}, indent=2))
+        print(result.model_dump_json(indent=2))
     else:
-        _print_register_summary(artifacts, resolution)
+        _print_register_summary(result)
+
+    if result.errors or result.partial_failure:
+        raise typer.Exit(1)
 
 
 @app.command(name="all")
@@ -268,33 +263,51 @@ def run_all(
     skip_pkg_managers: str = typer.Option("", "--skip-pkg-managers", help="Comma-separated list of pkg-mgrs to skip"),
 ) -> None:
     """Run full scan -> resolve -> register pipeline."""
+    is_json = ctx.parent and ctx.parent.params.get("json")
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # 1. SCAN
-    console.print("[bold cyan]>>> Step 1/3: Scanning system...[/]")
+    if not is_json:
+        console.print("[bold cyan]>>> Step 1/3: Scanning system...[/]")
+    
     skip_list = [s.strip() for s in skip_pkg_managers.split(",") if s.strip()]
     discovery = run_scan(history_file=str(history_file), skip_pkg_managers=skip_list)
 
-    discovery_path = output_dir / "mymise-discovery.json"
-    discovery_path.write_text(discovery.model_dump_json(indent=2))
-    _print_scan_summary(discovery)
+    if not is_json:
+        discovery_path = output_dir / "mymise-discovery.json"
+        discovery_path.write_text(discovery.model_dump_json(indent=2))
+        _print_scan_summary(discovery)
 
     # 2. RESOLVE
-    console.print("\n[bold cyan]>>> Step 2/3: Resolving tools against mise registry...[/]")
+    if not is_json:
+        console.print("\n[bold cyan]>>> Step 2/3: Resolving tools against mise registry...[/]")
+    
     resolution = run_resolve(discovery)
 
-    resolution_path = output_dir / "mymise-resolved.json"
-    resolution_path.write_text(resolution.model_dump_json(indent=2))
-    _print_resolve_summary(resolution)
+    if not is_json:
+        resolution_path = output_dir / "mymise-resolved.json"
+        resolution_path.write_text(resolution.model_dump_json(indent=2))
+        _print_resolve_summary(resolution)
 
     # 3. REGISTER
-    console.print("\n[bold cyan]>>> Step 3/3: Generating mise artifacts...[/]")
-    artifacts = run_register(resolution, output_dir=output_dir)
-    _print_register_summary(artifacts, resolution)
+    if not is_json:
+        console.print("\n[bold cyan]>>> Step 3/3: Generating mise artifacts...[/]")
+    
+    registration = run_register(resolution, output_dir=output_dir)
+    
+    if is_json:
+        print(registration.model_dump_json(indent=2))
+    else:
+        _print_register_summary(registration)
+        console.print(f"\n[bold green]Pipeline Complete![/] All files generated in [bold]{output_dir}[/]")
 
-    console.print(f"\n[bold green]Pipeline Complete![/] All files generated in [bold]{output_dir}[/]")
-
-    if discovery.partial_failure:
+    # Check for partial failures in any step
+    has_errors = (
+        discovery.errors or discovery.partial_failure or
+        resolution.errors or resolution.partial_failure or
+        registration.errors or registration.partial_failure
+    )
+    if has_errors:
         raise typer.Exit(1)
 
 

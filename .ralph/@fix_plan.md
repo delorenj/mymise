@@ -40,15 +40,8 @@
 > Goal: **User Outcome:** Developer runs `mymise all` and the entire scan-resolve-register pipeline executes end-to-end. **FRs covered:** FR-9 **NFRs addressed:** NFR-2, NFR-3 **Arch requirements:** AR-4 **Dependencies:** All of Epics 1-3
 
 - [x] Story 4.1: Implement End-to-End Pipeline Command
-  > **Status:** Draft As a developer
-  > I want to run `mymise all` and have the entire scan-resolve-register pipeline execute in sequence
-  > So that I can go from zero to a complete environment specification in one command.
-  > AC: Given a system with shell history and installed tools, When the user runs `mymise all`, Then the scan, resolve, and register stages execute in sequence, And intermediate JSON files are written to the output directory, And final artifacts (mise.toml, shorthands.toml, bootstrap.sh) are generated
-  > AC: Given the `--verbose` flag is passed, When the pipeline runs, Then debug-level logging is enabled for all stages
-  > AC: Given a partial failure occurs (e.g., some collectors fail), When the pipeline completes, Then exit code is 1 (partial failure) with warnings on stderr, And the pipeline continues through all stages rather than aborting
-  > Spec: specs/planning-artifacts/epics.md#story-4-1
-- [ ] Story 4.2: CLI Polish and Error Handling
-  > **Status:** Draft As a developer
+- [x] Story 4.2: CLI Polish and Error Handling
+  > **Status:** Completed As a developer
   > I want consistent error handling, exit codes, and output routing across all commands
   > So that mymise behaves predictably and integrates well with other CLI tools.
   > AC: Given any subcommand completes successfully, When no warnings occurred, Then exit code is 0

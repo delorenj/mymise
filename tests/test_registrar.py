@@ -1,11 +1,18 @@
-import pytest
 from datetime import datetime
-from pathlib import Path
+
+import pytest
+
 from src.mymise.models import (
-    ResolutionResult, ResolvedTool, UnresolvedTool, BackendType, 
-    DiscoveredTool, ToolCategory, ToolSource
+    BackendType,
+    DiscoveredTool,
+    ResolutionResult,
+    ResolvedTool,
+    ToolCategory,
+    ToolSource,
+    UnresolvedTool,
 )
 from src.mymise.registrar import Registrar
+
 
 @pytest.fixture
 def sample_resolution_result():
