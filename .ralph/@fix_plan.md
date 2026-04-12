@@ -9,12 +9,7 @@
 - [x] Story 1.2: Implement PATH Binary Collector
 - [x] Story 1.3a: Implement Apt Collector
 - [x] Story 1.3b: Implement Snap Collector
-  > As a developer, I want mymise to inventory tools installed via snap, so that snap-managed applications are captured with provenance.
-  > AC: Given snap is available, When the SnapCollector runs, Then it returns DiscoveredTool objects with source=SNAP for each installed snap
-  > AC: Given snap is not installed, When available() is called, Then it returns False and the collector is skipped gracefully
-  > AC: Given the snap subprocess exceeds 10 seconds, When the timeout fires, Then the collector returns an empty list and logs a warning
-  > Spec: specs/planning-artifacts/epics.md#story-1-3b | Files: src/mymise/collectors/snap.py, tests/collectors/test_snap.py
-- [ ] Story 1.3c: Implement Mise Collector
+- [x] Story 1.3c: Implement Mise Collector
   > As a developer, I want mymise to inventory tools already managed by mise, so that the mise-native toolchain is captured alongside everything else.
   > AC: Given mise is available, When the MiseCollector runs, Then it returns DiscoveredTool objects with source=MISE for each tool managed by mise
   > AC: Given mise is not installed, When available() is called, Then it returns False and the collector is skipped gracefully
