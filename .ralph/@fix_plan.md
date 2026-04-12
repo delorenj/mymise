@@ -10,12 +10,7 @@
 - [x] Story 1.3a: Implement Apt Collector
 - [x] Story 1.3b: Implement Snap Collector
 - [x] Story 1.3c: Implement Mise Collector
-  > As a developer, I want mymise to inventory tools already managed by mise, so that the mise-native toolchain is captured alongside everything else.
-  > AC: Given mise is available, When the MiseCollector runs, Then it returns DiscoveredTool objects with source=MISE for each tool managed by mise
-  > AC: Given mise is not installed, When available() is called, Then it returns False and the collector is skipped gracefully
-  > AC: Given the mise subprocess exceeds 10 seconds, When the timeout fires, Then the collector returns an empty list and logs a warning
-  > Spec: specs/planning-artifacts/epics.md#story-1-3c | Files: src/mymise/collectors/mise.py, tests/collectors/test_mise.py
-- [ ] Story 1.4a: Implement Cargo Collector
+- [x] Story 1.4a: Implement Cargo Collector
   > As a developer, I want mymise to inventory tools installed via cargo, so that Rust toolchain binaries are captured with provenance.
   > AC: Given cargo is available, When the CargoCollector runs, Then it returns DiscoveredTool objects with source=CARGO for installed cargo binaries
   > AC: Given cargo is not on PATH, When available() is called, Then it returns False and the scan continues without error
