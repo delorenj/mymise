@@ -16,13 +16,6 @@
 - [x] Story 1.4d: Implement Go Collector
 - [x] Story 1.4e: Implement Uv Collector
 - [x] Story 1.5: Implement Scanner Orchestration with Merge and Deduplication
-  > **Status:** Draft As a developer
-  > I want all collectors to run and merge their results into a unified tool list
-  > So that I get one deduplicated inventory with all sources and the highest frequency for each tool.
-  > AC: Given multiple collectors return overlapping tools (e.g., `rg` found in PATH and cargo), When the Scanner merges results, Then each tool appears once with sources as the union of all discovered sources, And frequency is the max across sources, And last_used is the most recent timestamp
-  > AC: Given a collector raises an exception during collection, When the Scanner runs, Then it logs a warning via the project's structured logger (including collector name and exception type), returns an empty list for that collector, and continues with remaining collectors
-  > AC: Given the scan completes, When the Scanner builds the DiscoveryResult, Then it populates hostname, user, scan_timestamp, and scan_duration_seconds metadata
-  > Spec: specs/planning-artifacts/epics.md#story-1-5
 - [ ] Story 1.6: Wire Scan CLI Command with JSON/TOML Output, Flags, and Rich Summary
   > **Status:** Draft As a developer
   > I want to run `mymise scan` with the full documented flag set and see a Rich summary on stderr with the serialized manifest written to a file
@@ -38,8 +31,8 @@
 ### Registry Resolution
 > Goal: **User Outcome:** Developer runs `mymise resolve` and knows exactly which tools mise can manage today vs. which need manual handling. **FRs covered:** FR-6, FR-7, FR-9 (partial, resolve subcommand flags) **NFRs addressed:** NFR-1, NFR-2 **Arch requirements:** AR-3, AR-5 **Dependencies:** Reads `mymise-discovery.json` from Epic 1
 
-- [ ] Story 2.1: Implement Resolver with Mise Registry Lookup and Dry-Run Mode
-  > **Status:** Draft As a developer
+- [x] Story 2.1: Implement Resolver with Mise Registry Lookup and Dry-Run Mode
+  > **Status:** Complete As a developer
   > I want mymise to check each discovered tool against the mise registry (with a dry-run preview mode)
   > So that I know which tools can be managed by mise and I can preview the resolution plan without side effects.
   > AC: Given a DiscoveryResult JSON file with discovered tools, When the Resolver processes each tool, Then it calls `mise registry <tool_name>` via subprocess for each tool, And parses the tab-separated output to extract backend type and registry entry
