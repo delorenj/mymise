@@ -21,7 +21,7 @@
 > Goal: **User Outcome:** Developer runs `mymise resolve` and knows exactly which tools mise can manage today vs. which need manual handling. **FRs covered:** FR-6, FR-7, FR-9 (partial, resolve subcommand flags) **NFRs addressed:** NFR-1, NFR-2 **Arch requirements:** AR-3, AR-5 **Dependencies:** Reads `mymise-discovery.json` from Epic 1
 
 - [x] Story 2.1: Implement Resolver with Mise Registry Lookup and Dry-Run Mode
-- [ ] Story 2.2: Wire Resolve CLI Command with Flags and Rich Summary
+- [x] Story 2.2: Wire Resolve CLI Command with Flags and Rich Summary
   > **Status:** Draft As a developer
   > I want to run `mymise resolve` with configurable input, output, timeout, and dry-run flags
   > So that I can control the resolution step from the command line.

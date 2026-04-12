@@ -93,7 +93,14 @@ def test_resolve_default(
         
         # Check stderr for summary
         assert "Resolution Complete!" in result.stderr
+        assert "Resolved Tools" in result.stderr
+        assert "1" in result.stderr  # count of resolved
+        assert "Unresolved Tools" in result.stderr
+        assert "1" in result.stderr  # count of unresolved
+        assert "Resolution Rate" in result.stderr
         assert "50.0%" in result.stderr
+        assert "Backend Distribution" in result.stderr
+        assert "core" in result.stderr  # the backend type from mock_resolution_result
 
 
 @patch("mymise.cli.run_resolve")
