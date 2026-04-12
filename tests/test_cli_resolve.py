@@ -91,7 +91,7 @@ def test_resolve_default(
         assert '"schema_version": "1.0.0"' in output_file.read_text()
         assert "git" in output_file.read_text()
         
-        # Check stderr for summary
+        # Check output for summary
         assert "Resolution Complete!" in result.stderr
         assert "Resolved Tools" in result.stderr
         assert "1" in result.stderr  # count of resolved
@@ -172,9 +172,9 @@ def test_resolve_json_stdout(
         result = runner.invoke(app, ["--json", "resolve"])
         assert result.exit_code == 0
         
-        # Output should be in result.output (stdout)
+        # Output should be in result.output
         assert '"schema_version": "1.0.0"' in result.output
-        # Should NOT be in stderr
-        assert "Resolution Complete!" not in result.stderr
+        # Should NOT contain Rich summary
+        assert "Resolution Complete!" not in result.output
         # Should not create default file
         assert not Path("mymise-resolved.json").exists()
