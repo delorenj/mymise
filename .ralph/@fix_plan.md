@@ -16,7 +16,7 @@
 - [x] Story 1.4d: Implement Go Collector
 - [x] Story 1.4e: Implement Uv Collector
 - [x] Story 1.5: Implement Scanner Orchestration with Merge and Deduplication
-- [ ] Story 1.6: Wire Scan CLI Command with JSON/TOML Output, Flags, and Rich Summary
+- [x] Story 1.6: Wire Scan CLI Command with JSON/TOML Output, Flags, and Rich Summary
   > **Status:** Draft As a developer
   > I want to run `mymise scan` with the full documented flag set and see a Rich summary on stderr with the serialized manifest written to a file
   > So that I can control input sources, output format, and package manager inclusion.
