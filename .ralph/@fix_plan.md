@@ -8,12 +8,7 @@
 - [x] Story 1.1: Implement Zsh History Collector
 - [x] Story 1.2: Implement PATH Binary Collector
 - [x] Story 1.3a: Implement Apt Collector
-  > As a developer, I want mymise to inventory tools installed via apt, so that Debian/Ubuntu system packages are captured with provenance.
-  > AC: Given apt is available, When the AptCollector runs, Then it returns DiscoveredTool objects with source=APT for each installed package that provides an executable
-  > AC: Given apt is not installed, When available() is called, Then it returns False and the collector is skipped gracefully
-  > AC: Given the dpkg-query subprocess exceeds 10 seconds, When the timeout fires, Then the collector returns an empty list and logs a warning
-  > Spec: specs/planning-artifacts/epics.md#story-1-3a | Files: src/mymise/collectors/apt.py, tests/collectors/test_apt.py
-- [ ] Story 1.3b: Implement Snap Collector
+- [x] Story 1.3b: Implement Snap Collector
   > As a developer, I want mymise to inventory tools installed via snap, so that snap-managed applications are captured with provenance.
   > AC: Given snap is available, When the SnapCollector runs, Then it returns DiscoveredTool objects with source=SNAP for each installed snap
   > AC: Given snap is not installed, When available() is called, Then it returns False and the collector is skipped gracefully
