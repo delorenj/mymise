@@ -14,18 +14,8 @@
 - [x] Story 1.4b: Implement Npm Collector
 - [x] Story 1.4c: Implement Pipx Collector
 - [x] Story 1.4d: Implement Go Collector
-  > As a developer, I want mymise to inventory tools installed via go install, so that Go ecosystem binaries are captured with provenance.
-  > AC: Given go is available, When the GoCollector runs, Then it returns DiscoveredTool objects with source=GO for installed go binaries
-  > AC: Given go is not on PATH, When available() is called, Then it returns False and the scan continues without error
-  > AC: Given $GOPATH/bin does not exist, When the collector runs, Then it returns an empty list without raising
-  > Spec: specs/planning-artifacts/epics.md#story-1-4d | Files: src/mymise/collectors/go.py, tests/collectors/test_go.py
 - [x] Story 1.4e: Implement Uv Collector
-  > As a developer, I want mymise to inventory tools installed via uv tool, so that uv-managed Python CLI applications are captured with provenance.
-  > AC: Given uv is available, When the UvCollector runs, Then it returns DiscoveredTool objects with source=UV for installed uv tools
-  > AC: Given uv is not on PATH, When available() is called, Then it returns False and the scan continues without error
-  > AC: Given the uv subprocess exceeds 10 seconds, When the timeout fires, Then the collector returns an empty list and logs a warning
-  > Spec: specs/planning-artifacts/epics.md#story-1-4e | Files: src/mymise/collectors/uv.py, tests/collectors/test_uv.py
-- [ ] Story 1.5: Implement Scanner Orchestration with Merge and Deduplication
+- [x] Story 1.5: Implement Scanner Orchestration with Merge and Deduplication
   > **Status:** Draft As a developer
   > I want all collectors to run and merge their results into a unified tool list
   > So that I get one deduplicated inventory with all sources and the highest frequency for each tool.
