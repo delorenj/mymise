@@ -28,25 +28,13 @@ def test_pipx_collector_collect_success():
     mock_data = {
         "pipx_spec_version": "0.1",
         "venvs": {
-            "catt": {
-                "metadata": {
-                    "main_package": {
-                        "package": "catt",
-                        "package_version": "0.13.1",
-                        "apps": ["catt"]
-                    }
-                }
-            },
+            "catt": {"metadata": {"main_package": {"package": "catt", "package_version": "0.13.1", "apps": ["catt"]}}},
             "black": {
                 "metadata": {
-                    "main_package": {
-                        "package": "black",
-                        "package_version": "24.1.1",
-                        "apps": ["black", "blackd"]
-                    }
+                    "main_package": {"package": "black", "package_version": "24.1.1", "apps": ["black", "blackd"]}
                 }
-            }
-        }
+            },
+        },
     }
     mock_output = json.dumps(mock_data)
 

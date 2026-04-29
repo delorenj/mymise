@@ -15,6 +15,7 @@ runner = CliRunner()
 def mock_discovery_result() -> DiscoveryResult:
     """Return a mock DiscoveryResult for testing."""
     from datetime import datetime
+
     return DiscoveryResult(
         scan_timestamp=datetime.now(UTC),
         hostname="test-host",
@@ -51,12 +52,12 @@ def test_cli_help() -> None:
 def test_scan_default(mock_scan: MagicMock, mock_discovery_result: DiscoveryResult, tmp_path: Path) -> None:
     """Test 'mymise scan' with default parameters."""
     mock_scan.return_value = mock_discovery_result
-    
+
     # Change to temp directory so output file is created there
     with runner.isolated_filesystem(temp_dir=tmp_path):
         result = runner.invoke(app, ["scan"])
         assert result.exit_code == 0
-        
+
         output_file = Path("mymise-discovery.json")
         assert output_file.exists()
         assert '"schema_version": "1.0.0"' in output_file.read_text()
@@ -68,7 +69,7 @@ def test_scan_default(mock_scan: MagicMock, mock_discovery_result: DiscoveryResu
 def test_scan_custom_output(mock_scan: MagicMock, mock_discovery_result: DiscoveryResult, tmp_path: Path) -> None:
     """Test 'mymise scan --output' flag."""
     mock_scan.return_value = mock_discovery_result
-    
+
     with runner.isolated_filesystem(temp_dir=tmp_path):
         output_file = Path("custom.json")
         result = runner.invoke(app, ["scan", "--output", str(output_file)])
@@ -81,9 +82,9 @@ def test_scan_custom_output(mock_scan: MagicMock, mock_discovery_result: Discove
 def test_scan_skip_pkg_managers(mock_scan: MagicMock, mock_discovery_result: DiscoveryResult, tmp_path: Path) -> None:
     """Test 'mymise scan --skip-pkg-managers' flag."""
     mock_scan.return_value = mock_discovery_result
-    
+
     runner.invoke(app, ["scan", "--skip-pkg-managers", "apt,snap"])
-    
+
     # Verify mock_scan was called with skip_pkg_managers=["apt", "snap"]
     args, kwargs = mock_scan.call_args
     assert kwargs["skip_pkg_managers"] == ["apt", "snap"]
@@ -93,7 +94,7 @@ def test_scan_skip_pkg_managers(mock_scan: MagicMock, mock_discovery_result: Dis
 def test_scan_format_toml(mock_scan: MagicMock, mock_discovery_result: DiscoveryResult, tmp_path: Path) -> None:
     """Test 'mymise scan --format toml' flag."""
     mock_scan.return_value = mock_discovery_result
-    
+
     with runner.isolated_filesystem(temp_dir=tmp_path):
         result = runner.invoke(app, ["scan", "--format", "toml", "--output", "discovery.toml"])
         assert result.exit_code == 0
@@ -106,7 +107,7 @@ def test_scan_format_toml(mock_scan: MagicMock, mock_discovery_result: Discovery
 def test_scan_json_stdout(mock_scan: MagicMock, mock_discovery_result: DiscoveryResult, tmp_path: Path) -> None:
     """Test 'mymise scan --json' flag for stdout output."""
     mock_scan.return_value = mock_discovery_result
-    
+
     with runner.isolated_filesystem(temp_dir=tmp_path):
         result = runner.invoke(app, ["--json", "scan"])
         assert result.exit_code == 0
@@ -120,7 +121,7 @@ def test_scan_json_stdout(mock_scan: MagicMock, mock_discovery_result: Discovery
 def test_scan_rich_summary(mock_scan: MagicMock, mock_discovery_result: DiscoveryResult, tmp_path: Path) -> None:
     """Test 'mymise scan' rich summary output on stderr."""
     mock_scan.return_value = mock_discovery_result
-    
+
     with runner.isolated_filesystem(temp_dir=tmp_path):
         result = runner.invoke(app, ["scan"])
         assert result.exit_code == 0
@@ -134,7 +135,7 @@ def test_scan_partial_failure(mock_scan: MagicMock, mock_discovery_result: Disco
     """Test 'mymise scan' with partial failure exit code."""
     mock_discovery_result.errors = ["Some collector failed"]
     mock_scan.return_value = mock_discovery_result
-    
+
     with runner.isolated_filesystem(temp_dir=tmp_path):
         result = runner.invoke(app, ["scan"])
         assert result.exit_code == 1

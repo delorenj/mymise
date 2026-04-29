@@ -56,7 +56,7 @@ def mock_collectors():
     mock_apt_instance = mock_apt_cls.return_value
     mock_apt_instance.name = "apt"
     mock_apt_instance.available.return_value = False
-    
+
     # Collector D raises an exception
     mock_npm_cls = MagicMock()
     mock_npm_cls.__name__ = "NpmCollector"
@@ -76,16 +76,19 @@ def mock_collectors():
 
 def test_scan_merges_and_deduplicates(mock_collectors):
     """Verify that scan() merges tools from multiple collectors correctly."""
-    with patch("mymise.scanner.COLLECTORS", [
-        mock_collectors["CargoCollector"],
-        mock_collectors["PathCollector"],
-        mock_collectors["AptCollector"],
-    ]):
+    with patch(
+        "mymise.scanner.COLLECTORS",
+        [
+            mock_collectors["CargoCollector"],
+            mock_collectors["PathCollector"],
+            mock_collectors["AptCollector"],
+        ],
+    ):
         result = scan()
 
         # Should have 2 unique tools: rg and bat
         assert len(result.tools) == 2
-        
+
         # Verify 'rg' merge logic
         rg = next(t for t in result.tools if t.name == "rg")
         assert set(rg.sources) == {ToolSource.CARGO, ToolSource.PATH}
@@ -101,15 +104,18 @@ def test_scan_merges_and_deduplicates(mock_collectors):
 
 def test_scan_handles_collector_exceptions(mock_collectors, caplog):
     """Verify that scan() continues if a collector raises an exception."""
-    with patch("mymise.scanner.COLLECTORS", [
-        mock_collectors["PathCollector"],
-        mock_collectors["NpmCollector"],
-    ]):
+    with patch(
+        "mymise.scanner.COLLECTORS",
+        [
+            mock_collectors["PathCollector"],
+            mock_collectors["NpmCollector"],
+        ],
+    ):
         result = scan()
 
         # Should still have tools from PathCollector
         assert any(t.name == "bat" for t in result.tools)
-        
+
         # Verify warning was logged
         assert "npm" in caplog.text
         assert "NPM failure" in caplog.text
@@ -140,7 +146,7 @@ def test_scan_passes_history_path_to_history_collector():
     mock_history_instance.name = "history"
     mock_history_instance.available.return_value = True
     mock_history_instance.collect.return_value = []
-    
+
     with (
         patch("mymise.scanner.COLLECTORS", [mock_history_cls]),
         patch("mymise.scanner.HistoryCollector", mock_history_cls),

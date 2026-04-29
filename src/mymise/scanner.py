@@ -116,9 +116,7 @@ def _merge_tools(tools: list[DiscoveredTool]) -> list[DiscoveredTool]:
 
         # Union of sources and installed_by
         existing.sources = sorted(list(set(existing.sources) | set(tool.sources)))
-        existing.installed_by = sorted(
-            list(set(existing.installed_by) | set(tool.installed_by))
-        )
+        existing.installed_by = sorted(list(set(existing.installed_by) | set(tool.installed_by)))
 
         # Max frequency
         existing.frequency = max(existing.frequency, tool.frequency)

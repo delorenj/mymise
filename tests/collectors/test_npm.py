@@ -29,7 +29,7 @@ def test_npm_collector_collect_success():
         "dependencies": {
             "typescript": {"version": "5.3.3"},
             "ts-node": {"version": "10.9.2"},
-            "npm": {"version": "10.2.4"}
+            "npm": {"version": "10.2.4"},
         }
     }
     mock_output = json.dumps(mock_data)

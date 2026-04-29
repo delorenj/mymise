@@ -76,20 +76,20 @@ def test_resolve_default(
 ) -> None:
     """Test 'mymise resolve' with default parameters."""
     mock_resolve.return_value = mock_resolution_result
-    
+
     with runner.isolated_filesystem(temp_dir=tmp_path):
         # Create input file
         input_file = Path("mymise-discovery.json")
         input_file.write_text(mock_discovery_result.model_dump_json())
-        
+
         result = runner.invoke(app, ["resolve"])
         assert result.exit_code == 0
-        
+
         output_file = Path("mymise-resolved.json")
         assert output_file.exists()
         assert '"schema_version": "1.0.0"' in output_file.read_text()
         assert "git" in output_file.read_text()
-        
+
         # Check output for summary
         assert "Resolution Complete!" in result.output
         assert "Resolved Tools" in result.output
@@ -111,12 +111,12 @@ def test_resolve_custom_paths(
 ) -> None:
     """Test 'mymise resolve' with custom input/output paths."""
     mock_resolve.return_value = mock_resolution_result
-    
+
     with runner.isolated_filesystem(temp_dir=tmp_path):
         input_file = Path("custom-input.json")
         input_file.write_text(mock_discovery_result.model_dump_json())
         output_file = Path("custom-output.json")
-        
+
         result = runner.invoke(app, ["resolve", "--input", str(input_file), "--output", str(output_file)])
         assert result.exit_code == 0
         assert output_file.exists()
@@ -131,14 +131,14 @@ def test_resolve_timeout_and_dry_run(
 ) -> None:
     """Test 'mymise resolve' with --timeout and --dry-run flags."""
     mock_resolve.return_value = mock_resolution_result
-    
+
     with runner.isolated_filesystem(temp_dir=tmp_path):
         input_file = Path("mymise-discovery.json")
         input_file.write_text(mock_discovery_result.model_dump_json())
-        
+
         result = runner.invoke(app, ["resolve", "--timeout", "30", "--dry-run"])
         assert result.exit_code == 0
-        
+
         # Verify mock_resolve was called with correct parameters
         args, kwargs = mock_resolve.call_args
         assert kwargs["timeout"] == 30
@@ -163,14 +163,14 @@ def test_resolve_json_stdout(
 ) -> None:
     """Test 'mymise resolve --json' flag for stdout output."""
     mock_resolve.return_value = mock_resolution_result
-    
+
     with runner.isolated_filesystem(temp_dir=tmp_path):
         input_file = Path("mymise-discovery.json")
         input_file.write_text(mock_discovery_result.model_dump_json())
-        
+
         result = runner.invoke(app, ["--json", "resolve"])
         assert result.exit_code == 0
-        
+
         # Output should be in result.output
         assert '"schema_version": "1.0.0"' in result.output
         # Should NOT contain Rich summary

@@ -1,5 +1,4 @@
 import logging
-import re
 from enum import StrEnum
 from pathlib import Path
 from typing import Any
@@ -155,6 +154,8 @@ def main(
 ) -> None:
     if verbose:
         logger.setLevel(logging.DEBUG)
+    elif json:
+        logger.setLevel(logging.WARNING)
 
 
 @app.command()
@@ -219,7 +220,7 @@ def resolve(
     else:
         output.write_text(result.model_dump_json(indent=2))
         _print_resolve_summary(result)
-        
+
     if result.errors or result.partial_failure:
         raise typer.Exit(1)
 
@@ -269,7 +270,7 @@ def run_all(
     # 1. SCAN
     if not is_json:
         console.print("[bold cyan]>>> Step 1/3: Scanning system...[/]")
-    
+
     skip_list = [s.strip() for s in skip_pkg_managers.split(",") if s.strip()]
     discovery = run_scan(history_file=str(history_file), skip_pkg_managers=skip_list)
 
@@ -281,7 +282,7 @@ def run_all(
     # 2. RESOLVE
     if not is_json:
         console.print("\n[bold cyan]>>> Step 2/3: Resolving tools against mise registry...[/]")
-    
+
     resolution = run_resolve(discovery)
 
     if not is_json:
@@ -292,9 +293,9 @@ def run_all(
     # 3. REGISTER
     if not is_json:
         console.print("\n[bold cyan]>>> Step 3/3: Generating mise artifacts...[/]")
-    
+
     registration = run_register(resolution, output_dir=output_dir)
-    
+
     if is_json:
         print(registration.model_dump_json(indent=2))
     else:
@@ -303,9 +304,12 @@ def run_all(
 
     # Check for partial failures in any step
     has_errors = (
-        discovery.errors or discovery.partial_failure or
-        resolution.errors or resolution.partial_failure or
-        registration.errors or registration.partial_failure
+        discovery.errors
+        or discovery.partial_failure
+        or resolution.errors
+        or resolution.partial_failure
+        or registration.errors
+        or registration.partial_failure
     )
     if has_errors:
         raise typer.Exit(1)

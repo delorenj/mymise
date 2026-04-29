@@ -26,21 +26,19 @@ def test_go_collector_collect_success(tmp_path):
     go_path = tmp_path / "go"
     bin_dir = go_path / "bin"
     bin_dir.mkdir(parents=True)
-    
+
     (bin_dir / "tool1").write_text("binary1")
     (bin_dir / "tool1").chmod(0o755)
     (bin_dir / "tool2").write_text("binary2")
     (bin_dir / "tool2").chmod(0o755)
-    
-    with patch("shutil.which", return_value="/usr/bin/go"), \
-         patch("subprocess.run") as mock_run:
-        
+
+    with patch("shutil.which", return_value="/usr/bin/go"), patch("subprocess.run") as mock_run:
         # Mock go env GOPATH
         mock_run.return_value = MagicMock(stdout=str(go_path), stderr="", returncode=0)
-        
+
         collector = GoCollector()
         tools = collector.collect()
-        
+
         assert len(tools) == 2
         names = {t.name for t in tools}
         assert "tool1" in names
@@ -51,12 +49,10 @@ def test_go_collector_collect_success(tmp_path):
 def test_go_collector_collect_no_bin_dir(tmp_path):
     go_path = tmp_path / "go"
     # bin dir not created
-    
-    with patch("shutil.which", return_value="/usr/bin/go"), \
-         patch("subprocess.run") as mock_run:
-        
+
+    with patch("shutil.which", return_value="/usr/bin/go"), patch("subprocess.run") as mock_run:
         mock_run.return_value = MagicMock(stdout=str(go_path), stderr="", returncode=0)
-        
+
         collector = GoCollector()
         tools = collector.collect()
         assert tools == []
