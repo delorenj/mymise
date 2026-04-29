@@ -69,18 +69,19 @@ def test_resolver_dry_run(discovery_result):
 
 
 def test_resolver_unknown_backend(discovery_result):
+    """When mise emits only backends our enum doesn't know, the parser falls through to 'format unrecognized'."""
     with patch("subprocess.run") as mock_run:
-        mock_run.return_value = MagicMock(returncode=0, stdout="python\tunknown_backend:python\n", stderr="")
+        mock_run.return_value = MagicMock(returncode=0, stdout="unknown_backend:python\n", stderr="")
 
         result = resolve(discovery_result)
 
-        assert len(result.unresolved) == 2  # Both python (unknown backend) and unknown-tool (default) are unresolved
-        assert any("Unknown backend" in r.suggested_actions[0] for r in result.unresolved if r.name == "python")
+        assert len(result.unresolved) == 2
+        assert any("unrecognized" in r.suggested_actions[0] for r in result.unresolved if r.name == "python")
 
 
 def test_resolver_unrecognized_format(discovery_result):
     with patch("subprocess.run") as mock_run:
-        mock_run.return_value = MagicMock(returncode=0, stdout="bad_format_no_tabs\n", stderr="")
+        mock_run.return_value = MagicMock(returncode=0, stdout="bad_format_no_colons\n", stderr="")
 
         result = resolve(discovery_result)
 
@@ -120,14 +121,60 @@ def test_resolver_propagates_partial_failure_on_timeout(discovery_result):
     assert all("Timeout" in err for err in result.errors)
 
 
-def test_resolver_propagates_partial_failure_on_unknown_backend(discovery_result):
-    """Unknown backends must be tracked as errors so the CLI can exit non-zero."""
+def test_resolver_propagates_partial_failure_on_unrecognized_format(discovery_result):
+    """When mise output has no recognizable backend, the parser must surface a partial failure."""
     with patch("subprocess.run") as mock_run:
-        mock_run.return_value = MagicMock(returncode=0, stdout="python\tnot_a_real_backend:python\n", stderr="")
+        mock_run.return_value = MagicMock(returncode=0, stdout="not_a_real_backend:python\n", stderr="")
         result = resolve(discovery_result)
 
     assert result.partial_failure is True
-    assert any("Unknown backend" in err for err in result.errors)
+    assert any("unrecognized" in err for err in result.errors)
+
+
+def test_resolver_parses_real_mise_format_single_entry(discovery_result):
+    """Real `mise registry node` returns 'core:node' with no leading tool-name or tabs."""
+    from mymise.models import BackendType
+
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0, stdout="core:python\n", stderr="")
+        result = resolve(discovery_result)
+
+    assert len(result.resolved) == 2
+    assert all(r.backend == BackendType.CORE for r in result.resolved)
+    assert all(r.registry_entry == "python" for r in result.resolved)
+
+
+def test_resolver_parses_real_mise_format_multiple_backends(discovery_result):
+    """Real `mise registry rg` returns 'aqua:BurntSushi/ripgrep asdf:... cargo:ripgrep' on one line."""
+    from mymise.models import BackendType
+
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(
+            returncode=0,
+            stdout="aqua:BurntSushi/ripgrep asdf:https://gitlab.com/wt0f/asdf-ripgrep cargo:ripgrep\n",
+            stderr="",
+        )
+        result = resolve(discovery_result)
+
+    # Parser prefers the first valid entry (aqua) since mise lists by registry preference
+    assert len(result.resolved) == 2
+    assert all(r.backend == BackendType.AQUA for r in result.resolved)
+    assert all(r.registry_entry == "BurntSushi/ripgrep" for r in result.resolved)
+
+
+def test_resolver_skips_unknown_backends_picks_first_known(discovery_result):
+    """If first entry has an unknown backend, parser falls through to the next valid one."""
+    from mymise.models import BackendType
+
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0, stdout="weirdbackend:foo cargo:python\n", stderr="")
+        result = resolve(discovery_result)
+
+    assert len(result.resolved) == 2
+    assert all(r.backend == BackendType.CARGO for r in result.resolved)
+    assert all(r.registry_entry == "python" for r in result.resolved)
+    # No error tracking when a fallback succeeds
+    assert result.partial_failure is False
 
 
 def test_resolver_clean_run_has_no_errors(discovery_result):

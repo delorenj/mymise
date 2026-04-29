@@ -37,6 +37,31 @@ class Resolver:
             self._errors.append(msg)
             return None
 
+    @staticmethod
+    def _parse_registry_output(output: str) -> tuple[BackendType, str] | None:
+        """Parse `mise registry <tool>` stdout.
+
+        Real mise emits one or more whitespace-separated `backend:identifier` entries on a
+        single line, e.g.:
+            core:node
+            aqua:BurntSushi/ripgrep asdf:https://gitlab.com/wt0f/asdf-ripgrep cargo:ripgrep
+
+        Returns (backend, identifier) for the first entry whose backend matches our enum,
+        or None if no entry is recognizable. Prefers earlier entries since mise lists
+        them in registry-preference order.
+        """
+        for entry in output.split():
+            if ":" not in entry:
+                continue
+            backend_part, _, identifier = entry.partition(":")
+            try:
+                backend = BackendType(backend_part)
+            except ValueError:
+                continue
+            if identifier:
+                return backend, identifier
+        return None
+
     def resolve(self, discovery: DiscoveryResult) -> ResolutionResult:
         # Reset error tracker for this resolve pass
         self._errors = []
@@ -45,49 +70,36 @@ class Resolver:
 
         for tool in discovery.tools:
             output = self._lookup_registry(tool.name)
-            if output:
-                # Expected format: tool_name\tbackend:owner/repo
-                parts = output.split("\t")
-                if len(parts) >= 2 and ":" in parts[1]:
-                    backend_part, registry_entry = parts[1].split(":", 1)
-
-                    try:
-                        backend = BackendType(backend_part)
-                    except ValueError:
-                        msg = f"Unknown backend '{backend_part}' for tool '{tool.name}'"
-                        logger.warning(msg)
-                        self._errors.append(msg)
-                        unresolved.append(
-                            UnresolvedTool(
-                                name=tool.name, original=tool, suggested_actions=[f"Unknown backend: {backend_part}"]
-                            )
-                        )
-                        continue
-
-                    resolved.append(
-                        ResolvedTool(
-                            name=tool.name,
-                            backend=backend,
-                            registry_entry=registry_entry,
-                            install_command=f"mise install {tool.name}@latest",
-                            original=tool,
-                        )
-                    )
-                else:
-                    msg = f"Mise registry output format unrecognized for '{tool.name}': {output!r}"
-                    logger.warning(msg)
-                    self._errors.append(msg)
-                    unresolved.append(
-                        UnresolvedTool(
-                            name=tool.name,
-                            original=tool,
-                            suggested_actions=["Mise registry output format unrecognized"],
-                        )
-                    )
-            else:
+            if not output:
                 unresolved.append(
                     UnresolvedTool(name=tool.name, original=tool, suggested_actions=["Not found in mise registry"])
                 )
+                continue
+
+            parsed = self._parse_registry_output(output)
+            if parsed is None:
+                msg = f"Mise registry output format unrecognized for '{tool.name}': {output!r}"
+                logger.warning(msg)
+                self._errors.append(msg)
+                unresolved.append(
+                    UnresolvedTool(
+                        name=tool.name,
+                        original=tool,
+                        suggested_actions=["Mise registry output format unrecognized"],
+                    )
+                )
+                continue
+
+            backend, identifier = parsed
+            resolved.append(
+                ResolvedTool(
+                    name=tool.name,
+                    backend=backend,
+                    registry_entry=identifier,
+                    install_command=f"mise install {tool.name}@latest",
+                    original=tool,
+                )
+            )
 
         total = len(discovery.tools)
         resolution_rate = len(resolved) / total if total > 0 else 0.0
