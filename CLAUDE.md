@@ -9,6 +9,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Move ticket to `In Progress` before first code change
 - Emergency bypass only: `ALLOW_NO_TICKET=1`
 
+### Reality-Drift Guard: Test Drive
+
+Unit tests prove correctness in isolation. They do **not** prove the feature works against a real machine. Mock-only test suites are the #1 source of "ships green, behaves broken" regressions.
+
+**Before marking any story `review` or `done`:**
+
+1. Run `mise run testdrive` (end-to-end against the real system in an isolated tmp dir)
+2. Triage any new findings into the backlog, even if the script exits 0
+3. Note the finding count in the story's Completion Notes
+
+The test drive script is at `scripts/testdrive.sh`. It runs the full pipeline (`mymise all`), validates artifacts, and confirms no clobbering of project files. Pass `--keep` to retain output for inspection.
+
 ## Commands
 
 All tasks are defined in `mise.toml` and run via `mise run <task>`:
@@ -22,6 +34,7 @@ mise run format       # uv run ruff format src/ tests/
 mise run ci           # lint + test
 mise run scan         # uv run mymise scan
 mise run resolve      # uv run mymise resolve
+mise run testdrive    # E2E smoke test against real machine in isolated tmp dir
 ```
 
 Run a single test file: `uv run pytest tests/test_cli.py -v`
