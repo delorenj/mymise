@@ -37,3 +37,7 @@ bootstrap.sh
 _bmad-output/
 .coverage
 .pytest_cache/
+
+# Codex CLI OAuth session — never commit
+.codex/auth.json
+auth.json
